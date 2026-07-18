@@ -1,69 +1,66 @@
-import WebSocket from 'ws';
 import { logger } from '../utils/logger';
 import { io } from '../server';
 import { config } from '../config/env';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const fyersModel = require('fyers-api-v3');
 
 class FyersSocketService {
-  private ws: WebSocket | null = null;
+  private fyersDataSocket: any = null;
   private isConnected = false;
-  
-  // Fyers v3 Data WebSocket endpoint
-  private endpoint = 'wss://api.fyers.in/socket/v2/data/';
 
   connect() {
     if (this.isConnected) return;
 
-    // Fyers WS requires an access token
-    const token = `${config.fyers.appId}:${config.fyers.authToken}`;
-    
-    this.ws = new WebSocket(`${this.endpoint}?access_token=${token}`);
+    const accessToken = `${config.fyers.appId}:${config.fyers.authToken}`;
 
-    this.ws.on('open', () => {
-      this.isConnected = true;
-      logger.info('Connected to Fyers WebSocket');
-      this.subscribeToSymbols(['NSE:NIFTY50-INDEX', 'NSE:NIFTYBANK-INDEX', 'NSE:RELIANCE-EQ']);
-    });
+    try {
+      this.fyersDataSocket = new fyersModel.fyersDataSocket(accessToken, './', false);
 
-    this.ws.on('message', (data: Buffer) => {
-      this.handleMessage(data);
-    });
+      this.fyersDataSocket.on('connect', () => {
+        this.isConnected = true;
+        logger.info('Connected to Official Fyers Market Data Socket');
+        this.subscribeToSymbols(['NSE:NIFTY50-INDEX', 'NSE:NIFTYBANK-INDEX', 'NSE:RELIANCE-EQ']);
+      });
 
-    this.ws.on('close', () => {
-      this.isConnected = false;
-      logger.warn('Fyers WebSocket Disconnected. Reconnecting in 5s...');
-      setTimeout(() => this.connect(), 5000);
-    });
+      this.fyersDataSocket.on('message', (msg: any) => {
+        this.handleMessage(msg);
+      });
 
-    this.ws.on('error', (err) => {
-      logger.error(`Fyers WS Error: ${err.message}`);
-    });
+      this.fyersDataSocket.on('error', (err: any) => {
+        logger.error(`Fyers Official WS Error: ${JSON.stringify(err)}`);
+      });
+
+      this.fyersDataSocket.on('close', () => {
+        this.isConnected = false;
+        logger.warn('Fyers Official WS Disconnected');
+      });
+
+      this.fyersDataSocket.autoreconnect(6);
+      this.fyersDataSocket.connect();
+    } catch (error) {
+      logger.error('Failed to initialize Fyers Data Socket: ' + error);
+    }
   }
 
-  private handleMessage(data: Buffer) {
+  private handleMessage(data: any) {
     try {
-      // In Fyers v3, data can be binary. We assume it's parsed or text for this boilerplate
-      const parsed = JSON.parse(data.toString());
-      
       // Broadcast live data to all connected clients via Socket.io
-      // For a real app, only broadcast to clients subscribed to specific rooms
-      io.emit('market_data', parsed);
-      
-      // We would also push this to Redis (Upstash) or a pub/sub queue here for the Scanner Engine
+      io.emit('market_data', data);
     } catch (e) {
-      // Handle parse error
+      logger.error('Error handling Fyers message: ' + e);
     }
   }
 
   subscribeToSymbols(symbols: string[]) {
-    if (!this.isConnected || !this.ws) return;
+    if (!this.isConnected || !this.fyersDataSocket) return;
     
-    const payload = {
-      T: 'SUB_L2',
-      L2LIST: symbols
-    };
-    
-    this.ws.send(JSON.stringify(payload));
-    logger.info(`Subscribed to: ${symbols.join(', ')}`);
+    try {
+      // 'symbolUpdate' for OHLCV, 'lite' for LTP
+      this.fyersDataSocket.subscribe(symbols, 'symbolUpdate');
+      logger.info(`Subscribed to: ${symbols.join(', ')}`);
+    } catch (e) {
+      logger.error('Error subscribing to symbols: ' + e);
+    }
   }
 }
 

@@ -25,14 +25,15 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
+    "fyers-api-v3": "^2.0.0",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
     "socket.io": "^4.8.3",
     "technicalindicators": "^3.1.0",
+    "typescript": "^7.0.2",
     "winston": "^3.19.0",
-    "ws": "^8.21.1",
-    "typescript": "^7.0.2"
+    "ws": "^8.21.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
