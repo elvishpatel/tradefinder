@@ -38,7 +38,7 @@ export default function AlertsPage() {
                   <option>Price Crosses Above</option>
                   <option>Price Crosses Below</option>
                   <option>Volume Breakout</option>
-                  <option>RSI > 70</option>
+                  <option>RSI &gt; 70</option>
                 </select>
               </div>
               <div className="space-y-2">
