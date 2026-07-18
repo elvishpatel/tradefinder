@@ -7,8 +7,8 @@ class FyersSocketService {
   private ws: WebSocket | null = null;
   private isConnected = false;
   
-  // Dummy endpoint for Fyers WS (replace with actual Fyers Data WS endpoint)
-  private endpoint = 'wss://api.fyers.in/socket/v3/data';
+  // Fyers v3 Data WebSocket endpoint
+  private endpoint = 'wss://api.fyers.in/socket/v2/data/';
 
   connect() {
     if (this.isConnected) return;
