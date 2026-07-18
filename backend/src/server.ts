@@ -31,6 +31,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health Check Route
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).send('TradeFinder API is running');
+});
+
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'TradeFinder API is running' });
 });
