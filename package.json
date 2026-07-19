@@ -1,0 +1,13 @@
+{
+  "name": "tradefinder-root",
+  "version": "1.0.0",
+  "description": "TradeFinder Platform Root Workspace Manager",
+  "scripts": {
+    "install:server": "npm install --prefix server",
+    "install:client": "npm install --prefix client",
+    "build:server": "npm run build --prefix server",
+    "build:client": "npm run build --prefix client",
+    "install": "npm run install:server",
+    "build": "npm run build:server"
+  }
+}
