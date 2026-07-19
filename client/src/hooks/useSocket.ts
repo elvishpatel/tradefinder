@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import useMarketStore from '../store/marketStore';
 import useAuthStore from '../store/authStore';
 
-const SOCKET_SERVER_URL = 'http://localhost:5000';
+const SOCKET_SERVER_URL = 'https://tradefinder-zvp0.onrender.com';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
