@@ -80,15 +80,15 @@ export class MarketEngine {
       if (sectors.length === 0) {
         logger.info('Supabase sectors table is empty. Loading default sector registry in-memory...');
         sectors = [
-          { id: 'sec-bank', name: 'NIFTY_BANK', display_name: 'Nifty Bank', index_symbol: 'NSE:NIFTYBANK-INDEX' },
-          { id: 'sec-it', name: 'NIFTY_IT', display_name: 'Nifty IT', index_symbol: 'NSE:NIFTYIT-INDEX' },
-          { id: 'sec-auto', name: 'NIFTY_AUTO', display_name: 'Nifty Auto', index_symbol: 'NSE:NIFTYAUTO-INDEX' },
-          { id: 'sec-metal', name: 'NIFTY_METAL', display_name: 'Nifty Metal', index_symbol: 'NSE:NIFTYMETAL-INDEX' },
-          { id: 'sec-pharma', name: 'NIFTY_PHARMA', display_name: 'Nifty Pharma', index_symbol: 'NSE:NIFTYPHARMA-INDEX' },
-          { id: 'sec-fmcg', name: 'NIFTY_FMCG', display_name: 'Nifty FMCG', index_symbol: 'NSE:NIFTYFMCG-INDEX' },
-          { id: 'sec-energy', name: 'NIFTY_ENERGY', display_name: 'Nifty Energy', index_symbol: 'NSE:NIFTYENERGY-INDEX' },
-          { id: 'sec-infra', name: 'NIFTY_INFRA', display_name: 'Nifty Infra', index_symbol: 'NSE:NIFTYINFRA-INDEX' },
-          { id: 'sec-realty', name: 'NIFTY_REALTY', display_name: 'Nifty Realty', index_symbol: 'NSE:NIFTYREALTY-INDEX' }
+          { id: '11111111-1111-1111-1111-111111111101', name: 'NIFTY_BANK', display_name: 'Nifty Bank', index_symbol: 'NSE:NIFTYBANK-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111102', name: 'NIFTY_IT', display_name: 'Nifty IT', index_symbol: 'NSE:NIFTYIT-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111103', name: 'NIFTY_AUTO', display_name: 'Nifty Auto', index_symbol: 'NSE:NIFTYAUTO-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111104', name: 'NIFTY_METAL', display_name: 'Nifty Metal', index_symbol: 'NSE:NIFTYMETAL-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111105', name: 'NIFTY_PHARMA', display_name: 'Nifty Pharma', index_symbol: 'NSE:NIFTYPHARMA-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111106', name: 'NIFTY_FMCG', display_name: 'Nifty FMCG', index_symbol: 'NSE:NIFTYFMCG-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111107', name: 'NIFTY_ENERGY', display_name: 'Nifty Energy', index_symbol: 'NSE:NIFTYENERGY-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111108', name: 'NIFTY_INFRA', display_name: 'Nifty Infra', index_symbol: 'NSE:NIFTYINFRA-INDEX' },
+          { id: '11111111-1111-1111-1111-111111111109', name: 'NIFTY_REALTY', display_name: 'Nifty Realty', index_symbol: 'NSE:NIFTYREALTY-INDEX' }
         ];
       }
 
@@ -96,36 +96,37 @@ export class MarketEngine {
         logger.info('Supabase stocks table is empty. Loading default stocks universe in-memory...');
         stocks = [
           // Bank
-          { id: 'stk-hdfc', symbol: 'NSE:HDFCBANK-EQ', company_name: 'HDFC Bank Ltd.', sector_id: 'sec-bank' },
-          { id: 'stk-icici', symbol: 'NSE:ICICIBANK-EQ', company_name: 'ICICI Bank Ltd.', sector_id: 'sec-bank' },
-          { id: 'stk-sbin', symbol: 'NSE:SBIN-EQ', company_name: 'State Bank of India', sector_id: 'sec-bank' },
-          { id: 'stk-axis', symbol: 'NSE:AXISBANK-EQ', company_name: 'Axis Bank Ltd.', sector_id: 'sec-bank' },
+          { id: '22222222-2222-2222-2222-222222222201', symbol: 'NSE:HDFCBANK-EQ', company_name: 'HDFC Bank Ltd.', sector_id: '11111111-1111-1111-1111-111111111101' },
+          { id: '22222222-2222-2222-2222-222222222202', symbol: 'NSE:ICICIBANK-EQ', company_name: 'ICICI Bank Ltd.', sector_id: '11111111-1111-1111-1111-111111111101' },
+          { id: '22222222-2222-2222-2222-222222222203', symbol: 'NSE:SBIN-EQ', company_name: 'State Bank of India', sector_id: '11111111-1111-1111-1111-111111111101' },
+          { id: '22222222-2222-2222-2222-222222222204', symbol: 'NSE:AXISBANK-EQ', company_name: 'Axis Bank Ltd.', sector_id: '11111111-1111-1111-1111-111111111101' },
           // IT
-          { id: 'stk-tcs', symbol: 'NSE:TCS-EQ', company_name: 'Tata Consultancy Services Ltd.', sector_id: 'sec-it' },
-          { id: 'stk-infy', symbol: 'NSE:INFY-EQ', company_name: 'Infosys Ltd.', sector_id: 'sec-it' },
-          { id: 'stk-hcl', symbol: 'NSE:HCLTECH-EQ', company_name: 'HCL Technologies Ltd.', sector_id: 'sec-it' },
+          { id: '22222222-2222-2222-2222-222222222205', symbol: 'NSE:TCS-EQ', company_name: 'Tata Consultancy Services Ltd.', sector_id: '11111111-1111-1111-1111-111111111102' },
+          { id: '22222222-2222-2222-2222-222222222206', symbol: 'NSE:INFY-EQ', company_name: 'Infosys Ltd.', sector_id: '11111111-1111-1111-1111-111111111102' },
+          { id: '22222222-2222-2222-2222-222222222207', symbol: 'NSE:HCLTECH-EQ', company_name: 'HCL Technologies Ltd.', sector_id: '11111111-1111-1111-1111-111111111102' },
           // Auto
-          { id: 'stk-tata', symbol: 'NSE:TATAMOTORS-EQ', company_name: 'Tata Motors Ltd.', sector_id: 'sec-auto' },
-          { id: 'stk-mm', symbol: 'NSE:M&M-EQ', company_name: 'Mahindra & Mahindra Ltd.', sector_id: 'sec-auto' },
-          { id: 'stk-maruti', symbol: 'NSE:MARUTI-EQ', company_name: 'Maruti Suzuki India Ltd.', sector_id: 'sec-auto' },
+          { id: '22222222-2222-2222-2222-222222222208', symbol: 'NSE:TATAMOTORS-EQ', company_name: 'Tata Motors Ltd.', sector_id: '11111111-1111-1111-1111-111111111103' },
+          { id: '22222222-2222-2222-2222-222222222209', symbol: 'NSE:M&M-EQ', company_name: 'Mahindra & Mahindra Ltd.', sector_id: '11111111-1111-1111-1111-111111111103' },
+          { id: '22222222-2222-2222-2222-222222222210', symbol: 'NSE:MARUTI-EQ', company_name: 'Maruti Suzuki India Ltd.', sector_id: '11111111-1111-1111-1111-111111111103' },
           // Metal
-          { id: 'stk-tatasteel', symbol: 'NSE:TATASTEEL-EQ', company_name: 'Tata Steel Ltd.', sector_id: 'sec-metal' },
-          { id: 'stk-jsw', symbol: 'NSE:JSWSTEEL-EQ', company_name: 'JSW Steel Ltd.', sector_id: 'sec-metal' },
+          { id: '22222222-2222-2222-2222-222222222211', symbol: 'NSE:TATASTEEL-EQ', company_name: 'Tata Steel Ltd.', sector_id: '11111111-1111-1111-1111-111111111104' },
+          { id: '22222222-2222-2222-2222-222222222212', symbol: 'NSE:JSWSTEEL-EQ', company_name: 'JSW Steel Ltd.', sector_id: '11111111-1111-1111-1111-111111111104' },
           // Pharma
-          { id: 'stk-sun', symbol: 'NSE:SUNPHARMA-EQ', company_name: 'Sun Pharma Industries Ltd.', sector_id: 'sec-pharma' },
-          { id: 'stk-cipla', symbol: 'NSE:CIPLA-EQ', company_name: 'Cipla Ltd.', sector_id: 'sec-pharma' },
+          { id: '22222222-2222-2222-2222-222222222213', symbol: 'NSE:SUNPHARMA-EQ', company_name: 'Sun Pharma Industries Ltd.', sector_id: '11111111-1111-1111-1111-111111111105' },
+          { id: '22222222-2222-2222-2222-222222222214', symbol: 'NSE:CIPLA-EQ', company_name: 'Cipla Ltd.', sector_id: '11111111-1111-1111-1111-111111111105' },
           // FMCG
-          { id: 'stk-itc', symbol: 'NSE:ITC-EQ', company_name: 'ITC Ltd.', sector_id: 'sec-fmcg' },
-          { id: 'stk-hul', symbol: 'NSE:HINDUNILVR-EQ', company_name: 'Hindustan Unilever Ltd.', sector_id: 'sec-fmcg' },
+          { id: '22222222-2222-2222-2222-222222222215', symbol: 'NSE:ITC-EQ', company_name: 'ITC Ltd.', sector_id: '11111111-1111-1111-1111-111111111106' },
+          { id: '22222222-2222-2222-2222-222222222216', symbol: 'NSE:HINDUNILVR-EQ', company_name: 'Hindustan Unilever Ltd.', sector_id: '11111111-1111-1111-1111-111111111106' },
           // Energy
-          { id: 'stk-reliance', symbol: 'NSE:RELIANCE-EQ', company_name: 'Reliance Industries Ltd.', sector_id: 'sec-energy' },
-          { id: 'stk-ongc', symbol: 'NSE:ONGC-EQ', company_name: 'Oil & Natural Gas Corp Ltd.', sector_id: 'sec-energy' },
+          { id: '22222222-2222-2222-2222-222222222217', symbol: 'NSE:RELIANCE-EQ', company_name: 'Reliance Industries Ltd.', sector_id: '11111111-1111-1111-1111-111111111107' },
+          { id: '22222222-2222-2222-2222-222222222218', symbol: 'NSE:ONGC-EQ', company_name: 'Oil & Natural Gas Corp Ltd.', sector_id: '11111111-1111-1111-1111-111111111107' },
           // Infra
-          { id: 'stk-lt', symbol: 'NSE:LT-EQ', company_name: 'Larsen & Toubro Ltd.', sector_id: 'sec-infra' },
+          { id: '22222222-2222-2222-2222-222222222219', symbol: 'NSE:LT-EQ', company_name: 'Larsen & Toubro Ltd.', sector_id: '11111111-1111-1111-1111-111111111108' },
           // Realty
-          { id: 'stk-dlf', symbol: 'NSE:DLF-EQ', company_name: 'DLF Ltd.', sector_id: 'sec-realty' }
+          { id: '22222222-2222-2222-2222-222222222220', symbol: 'NSE:DLF-EQ', company_name: 'DLF Ltd.', sector_id: '11111111-1111-1111-1111-111111111109' }
         ];
       }
+
 
       logger.info(`Loaded ${sectors.length} sectors and ${stocks.length} active stocks into Market Engine cache.`);
 
