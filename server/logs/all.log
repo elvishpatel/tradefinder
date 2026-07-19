@@ -1,0 +1,141 @@
+[2026-07-19 09:59:10:5910] [[32minfo[39m]: [32mSupabase client successfully initialized.[39m
+[2026-07-19 09:59:10:5910] [[32minfo[39m]: [32mStarting Market Live Streams...[39m
+[2026-07-19 09:59:10:5910] [[32minfo[39m]: [32mServer running in development mode on port 5000[39m
+[2026-07-19 09:59:11:5911] [[32minfo[39m]: [32mInitializing Market Engine...[39m
+[2026-07-19 09:59:12:5912] [[32minfo[39m]: [32mLoaded 0 sectors and 0 active stocks from Supabase.[39m
+[2026-07-19 09:59:12:5912] [[32minfo[39m]: [32mMarket Engine fully initialized and cached.[39m
+[2026-07-19 09:59:12:5912] [[32minfo[39m]: [32mInitiating Real-time Broadcast Loops (Simulated Market Data Fallback active)[39m
+[2026-07-19 09:59:12:5912] [[32minfo[39m]: [32mLive market feed initialized.[39m
+[2026-07-19 10:00:20:020] [[32minfo[39m]: [32mDemo user logged in: demo@tradefinder.com[39m
+[2026-07-19 10:00:20:020] [[32minfo[39m]: [32mClient connected: yyGxgZ6TMc9Zow3HAAAD[39m
+[2026-07-19 10:03:50:350] [[32minfo[39m]: [32mSupabase client successfully initialized.[39m
+[2026-07-19 10:03:50:350] [[32minfo[39m]: [32mStarting Market Live Streams...[39m
+[2026-07-19 10:03:50:350] [[32minfo[39m]: [32mServer running in development mode on port 5000[39m
+[2026-07-19 10:03:50:350] [[32minfo[39m]: [32mClient connected: sVQAPjClIc87I4sfAAAB[39m
+[2026-07-19 10:03:51:351] [[32minfo[39m]: [32mInitializing Market Engine...[39m
+[2026-07-19 10:03:52:352] [[32minfo[39m]: [32mSupabase sectors table is empty. Loading default sector registry in-memory...[39m
+[2026-07-19 10:03:52:352] [[32minfo[39m]: [32mSupabase stocks table is empty. Loading default stocks universe in-memory...[39m
+[2026-07-19 10:03:52:352] [[32minfo[39m]: [32mLoaded 9 sectors and 20 active stocks into Market Engine cache.[39m
+[2026-07-19 10:03:52:352] [[31merror[39m]: [31mError querying history for NSE:HDFCBANK-EQ: invalid input syntax for type uuid: "stk-hdfc"[39m
+[2026-07-19 10:03:52:352] [[32minfo[39m]: [32mInsufficient history for NSE:HDFCBANK-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:52:352] [[31merror[39m]: [31mError seeding historical candles for NSE:HDFCBANK-EQ: invalid input syntax for type uuid: "stk-hdfc"[39m
+[2026-07-19 10:03:52:352] [[31merror[39m]: [31mError seeding historical candles for NSE:HDFCBANK-EQ: invalid input syntax for type uuid: "stk-hdfc"[39m
+[2026-07-19 10:03:52:352] [[31merror[39m]: [31mError seeding historical candles for NSE:HDFCBANK-EQ: invalid input syntax for type uuid: "stk-hdfc"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:HDFCBANK-EQ: invalid input syntax for type uuid: "stk-hdfc"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError querying history for NSE:ICICIBANK-EQ: invalid input syntax for type uuid: "stk-icici"[39m
+[2026-07-19 10:03:53:353] [[32minfo[39m]: [32mInsufficient history for NSE:ICICIBANK-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:ICICIBANK-EQ: invalid input syntax for type uuid: "stk-icici"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:ICICIBANK-EQ: invalid input syntax for type uuid: "stk-icici"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:ICICIBANK-EQ: invalid input syntax for type uuid: "stk-icici"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:ICICIBANK-EQ: invalid input syntax for type uuid: "stk-icici"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError querying history for NSE:SBIN-EQ: invalid input syntax for type uuid: "stk-sbin"[39m
+[2026-07-19 10:03:53:353] [[32minfo[39m]: [32mInsufficient history for NSE:SBIN-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:SBIN-EQ: invalid input syntax for type uuid: "stk-sbin"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:SBIN-EQ: invalid input syntax for type uuid: "stk-sbin"[39m
+[2026-07-19 10:03:53:353] [[31merror[39m]: [31mError seeding historical candles for NSE:SBIN-EQ: invalid input syntax for type uuid: "stk-sbin"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:SBIN-EQ: invalid input syntax for type uuid: "stk-sbin"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError querying history for NSE:AXISBANK-EQ: invalid input syntax for type uuid: "stk-axis"[39m
+[2026-07-19 10:03:54:354] [[32minfo[39m]: [32mInsufficient history for NSE:AXISBANK-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:AXISBANK-EQ: invalid input syntax for type uuid: "stk-axis"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:AXISBANK-EQ: invalid input syntax for type uuid: "stk-axis"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:AXISBANK-EQ: invalid input syntax for type uuid: "stk-axis"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:AXISBANK-EQ: invalid input syntax for type uuid: "stk-axis"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError querying history for NSE:TCS-EQ: invalid input syntax for type uuid: "stk-tcs"[39m
+[2026-07-19 10:03:54:354] [[32minfo[39m]: [32mInsufficient history for NSE:TCS-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:TCS-EQ: invalid input syntax for type uuid: "stk-tcs"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:TCS-EQ: invalid input syntax for type uuid: "stk-tcs"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:TCS-EQ: invalid input syntax for type uuid: "stk-tcs"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:TCS-EQ: invalid input syntax for type uuid: "stk-tcs"[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError querying history for NSE:INFY-EQ: invalid input syntax for type uuid: "stk-infy"[39m
+[2026-07-19 10:03:54:354] [[32minfo[39m]: [32mInsufficient history for NSE:INFY-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:54:354] [[31merror[39m]: [31mError seeding historical candles for NSE:INFY-EQ: invalid input syntax for type uuid: "stk-infy"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:INFY-EQ: invalid input syntax for type uuid: "stk-infy"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:INFY-EQ: invalid input syntax for type uuid: "stk-infy"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:INFY-EQ: invalid input syntax for type uuid: "stk-infy"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError querying history for NSE:HCLTECH-EQ: invalid input syntax for type uuid: "stk-hcl"[39m
+[2026-07-19 10:03:55:355] [[32minfo[39m]: [32mInsufficient history for NSE:HCLTECH-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:HCLTECH-EQ: invalid input syntax for type uuid: "stk-hcl"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:HCLTECH-EQ: invalid input syntax for type uuid: "stk-hcl"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:HCLTECH-EQ: invalid input syntax for type uuid: "stk-hcl"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:HCLTECH-EQ: invalid input syntax for type uuid: "stk-hcl"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError querying history for NSE:TATAMOTORS-EQ: invalid input syntax for type uuid: "stk-tata"[39m
+[2026-07-19 10:03:55:355] [[32minfo[39m]: [32mInsufficient history for NSE:TATAMOTORS-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:TATAMOTORS-EQ: invalid input syntax for type uuid: "stk-tata"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:TATAMOTORS-EQ: invalid input syntax for type uuid: "stk-tata"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:TATAMOTORS-EQ: invalid input syntax for type uuid: "stk-tata"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError seeding historical candles for NSE:TATAMOTORS-EQ: invalid input syntax for type uuid: "stk-tata"[39m
+[2026-07-19 10:03:55:355] [[31merror[39m]: [31mError querying history for NSE:M&M-EQ: invalid input syntax for type uuid: "stk-mm"[39m
+[2026-07-19 10:03:55:355] [[32minfo[39m]: [32mInsufficient history for NSE:M&M-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:M&M-EQ: invalid input syntax for type uuid: "stk-mm"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:M&M-EQ: invalid input syntax for type uuid: "stk-mm"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:M&M-EQ: invalid input syntax for type uuid: "stk-mm"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:M&M-EQ: invalid input syntax for type uuid: "stk-mm"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError querying history for NSE:MARUTI-EQ: invalid input syntax for type uuid: "stk-maruti"[39m
+[2026-07-19 10:03:56:356] [[32minfo[39m]: [32mInsufficient history for NSE:MARUTI-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:MARUTI-EQ: invalid input syntax for type uuid: "stk-maruti"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:MARUTI-EQ: invalid input syntax for type uuid: "stk-maruti"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:MARUTI-EQ: invalid input syntax for type uuid: "stk-maruti"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:MARUTI-EQ: invalid input syntax for type uuid: "stk-maruti"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError querying history for NSE:TATASTEEL-EQ: invalid input syntax for type uuid: "stk-tatasteel"[39m
+[2026-07-19 10:03:56:356] [[32minfo[39m]: [32mInsufficient history for NSE:TATASTEEL-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:TATASTEEL-EQ: invalid input syntax for type uuid: "stk-tatasteel"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:TATASTEEL-EQ: invalid input syntax for type uuid: "stk-tatasteel"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:TATASTEEL-EQ: invalid input syntax for type uuid: "stk-tatasteel"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError seeding historical candles for NSE:TATASTEEL-EQ: invalid input syntax for type uuid: "stk-tatasteel"[39m
+[2026-07-19 10:03:56:356] [[31merror[39m]: [31mError querying history for NSE:JSWSTEEL-EQ: invalid input syntax for type uuid: "stk-jsw"[39m
+[2026-07-19 10:03:56:356] [[32minfo[39m]: [32mInsufficient history for NSE:JSWSTEEL-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:JSWSTEEL-EQ: invalid input syntax for type uuid: "stk-jsw"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:JSWSTEEL-EQ: invalid input syntax for type uuid: "stk-jsw"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:JSWSTEEL-EQ: invalid input syntax for type uuid: "stk-jsw"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:JSWSTEEL-EQ: invalid input syntax for type uuid: "stk-jsw"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError querying history for NSE:SUNPHARMA-EQ: invalid input syntax for type uuid: "stk-sun"[39m
+[2026-07-19 10:03:57:357] [[32minfo[39m]: [32mInsufficient history for NSE:SUNPHARMA-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:SUNPHARMA-EQ: invalid input syntax for type uuid: "stk-sun"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:SUNPHARMA-EQ: invalid input syntax for type uuid: "stk-sun"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:SUNPHARMA-EQ: invalid input syntax for type uuid: "stk-sun"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:SUNPHARMA-EQ: invalid input syntax for type uuid: "stk-sun"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError querying history for NSE:CIPLA-EQ: invalid input syntax for type uuid: "stk-cipla"[39m
+[2026-07-19 10:03:57:357] [[32minfo[39m]: [32mInsufficient history for NSE:CIPLA-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:CIPLA-EQ: invalid input syntax for type uuid: "stk-cipla"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:CIPLA-EQ: invalid input syntax for type uuid: "stk-cipla"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:CIPLA-EQ: invalid input syntax for type uuid: "stk-cipla"[39m
+[2026-07-19 10:03:57:357] [[31merror[39m]: [31mError seeding historical candles for NSE:CIPLA-EQ: invalid input syntax for type uuid: "stk-cipla"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError querying history for NSE:ITC-EQ: invalid input syntax for type uuid: "stk-itc"[39m
+[2026-07-19 10:03:58:358] [[32minfo[39m]: [32mInsufficient history for NSE:ITC-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:ITC-EQ: invalid input syntax for type uuid: "stk-itc"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:ITC-EQ: invalid input syntax for type uuid: "stk-itc"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:ITC-EQ: invalid input syntax for type uuid: "stk-itc"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:ITC-EQ: invalid input syntax for type uuid: "stk-itc"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError querying history for NSE:HINDUNILVR-EQ: invalid input syntax for type uuid: "stk-hul"[39m
+[2026-07-19 10:03:58:358] [[32minfo[39m]: [32mInsufficient history for NSE:HINDUNILVR-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:HINDUNILVR-EQ: invalid input syntax for type uuid: "stk-hul"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:HINDUNILVR-EQ: invalid input syntax for type uuid: "stk-hul"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:HINDUNILVR-EQ: invalid input syntax for type uuid: "stk-hul"[39m
+[2026-07-19 10:03:58:358] [[31merror[39m]: [31mError seeding historical candles for NSE:HINDUNILVR-EQ: invalid input syntax for type uuid: "stk-hul"[39m
+[2026-07-19 10:03:59:359] [[31merror[39m]: [31mError querying history for NSE:RELIANCE-EQ: invalid input syntax for type uuid: "stk-reliance"[39m
+[2026-07-19 10:03:59:359] [[32minfo[39m]: [32mInsufficient history for NSE:RELIANCE-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:03:59:359] [[31merror[39m]: [31mError seeding historical candles for NSE:RELIANCE-EQ: invalid input syntax for type uuid: "stk-reliance"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:RELIANCE-EQ: invalid input syntax for type uuid: "stk-reliance"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:RELIANCE-EQ: invalid input syntax for type uuid: "stk-reliance"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:RELIANCE-EQ: invalid input syntax for type uuid: "stk-reliance"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError querying history for NSE:ONGC-EQ: invalid input syntax for type uuid: "stk-ongc"[39m
+[2026-07-19 10:04:00:40] [[32minfo[39m]: [32mInsufficient history for NSE:ONGC-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:ONGC-EQ: invalid input syntax for type uuid: "stk-ongc"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:ONGC-EQ: invalid input syntax for type uuid: "stk-ongc"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:ONGC-EQ: invalid input syntax for type uuid: "stk-ongc"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:ONGC-EQ: invalid input syntax for type uuid: "stk-ongc"[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError querying history for NSE:LT-EQ: invalid input syntax for type uuid: "stk-lt"[39m
+[2026-07-19 10:04:00:40] [[32minfo[39m]: [32mInsufficient history for NSE:LT-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:04:00:40] [[31merror[39m]: [31mError seeding historical candles for NSE:LT-EQ: invalid input syntax for type uuid: "stk-lt"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:LT-EQ: invalid input syntax for type uuid: "stk-lt"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:LT-EQ: invalid input syntax for type uuid: "stk-lt"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:LT-EQ: invalid input syntax for type uuid: "stk-lt"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError querying history for NSE:DLF-EQ: invalid input syntax for type uuid: "stk-dlf"[39m
+[2026-07-19 10:04:01:41] [[32minfo[39m]: [32mInsufficient history for NSE:DLF-EQ. Generating mock historical daily candles...[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:DLF-EQ: invalid input syntax for type uuid: "stk-dlf"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:DLF-EQ: invalid input syntax for type uuid: "stk-dlf"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:DLF-EQ: invalid input syntax for type uuid: "stk-dlf"[39m
+[2026-07-19 10:04:01:41] [[31merror[39m]: [31mError seeding historical candles for NSE:DLF-EQ: invalid input syntax for type uuid: "stk-dlf"[39m
+[2026-07-19 10:04:01:41] [[32minfo[39m]: [32mMarket Engine fully initialized and cached.[39m
+[2026-07-19 10:04:01:41] [[32minfo[39m]: [32mInitiating Real-time Broadcast Loops (Simulated Market Data Fallback active)[39m
+[2026-07-19 10:04:01:41] [[32minfo[39m]: [32mLive market feed initialized.[39m
