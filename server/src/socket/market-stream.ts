@@ -38,7 +38,23 @@ export class MarketStream {
 
   private async fetchActiveFyersToken(): Promise<string | null> {
     try {
-      // Find any non-expired session in DB
+      // 1. Check in-memory sessions cache first
+      const memSessions = (sessionRepository as any).inMemorySessions;
+      if (memSessions && memSessions.size > 0) {
+        for (const [userId, s] of memSessions.entries()) {
+          if (s && s.accessToken && new Date(s.expiresAt).getTime() > Date.now()) {
+            return s.accessToken;
+          }
+        }
+      }
+
+      // 2. Query demo user or any active user in DB
+      const demoSession = await sessionRepository.findByUserId('00000000-0000-0000-0000-000000000000');
+      if (demoSession && demoSession.isValid && demoSession.accessToken) {
+        return demoSession.accessToken;
+      }
+
+      // 3. Fallback database query
       const { data, error } = await supabase
         .from('fyers_sessions')
         .select('user_id, access_token, expires_at')
@@ -47,18 +63,20 @@ export class MarketStream {
         .limit(1)
         .maybeSingle();
 
-      if (error || !data) return null;
-
-      const session = await sessionRepository.findByUserId(data.user_id);
-      if (session && session.isValid && session.accessToken) {
-        return session.accessToken;
+      if (!error && data) {
+        const session = await sessionRepository.findByUserId(data.user_id);
+        if (session && session.isValid && session.accessToken) {
+          return session.accessToken;
+        }
       }
+
       return null;
     } catch (err: any) {
       logger.error(`Error querying active Fyers token: ${err.message}`);
       return null;
     }
   }
+
 
   private startStreamingFeed() {
     logger.info('Initiating Real-time Fyers Market Polling Loop...');
