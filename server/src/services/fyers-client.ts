@@ -20,29 +20,40 @@ export interface NormalizedQuote {
 export class FyersClient {
   /**
    * Formats the Authorization header for Fyers API v3.
-   * Format required: "CLIENT_ID:ACCESS_TOKEN"
+   * Format required by Fyers API: "CLIENT_ID:ACCESS_TOKEN" (e.g. "XY12345-100:eyJhbGci...")
    */
-  public formatAuthHeader(token: string): string {
-    if (token.includes(':')) {
-      return token;
+  public formatAuthHeader(token: string, clientId?: string): string {
+    const trimmedToken = token.trim();
+    if (trimmedToken.includes(':')) {
+      return trimmedToken;
     }
-    const clientId = config.FYERS.CLIENT_ID;
-    if (!clientId) {
-      return token;
+    const activeClientId = clientId?.trim() || config.FYERS.CLIENT_ID;
+    if (activeClientId) {
+      return `${activeClientId}:${trimmedToken}`;
     }
-    return `${clientId}:${token}`;
+    return trimmedToken;
   }
 
   /**
    * Validate a Fyers Access Token by attempting to fetch Nifty 50 quote
    */
-  async validateAccessToken(token: string): Promise<{ valid: boolean; message?: string }> {
+  async validateAccessToken(token: string, clientId?: string): Promise<{ valid: boolean; message?: string }> {
     try {
-      const authHeader = this.formatAuthHeader(token);
+      const authHeader = this.formatAuthHeader(token, clientId);
+
+      if (!authHeader.includes(':')) {
+        return {
+          valid: false,
+          message: 'Fyers App ID / Client ID is missing. Please enter your Fyers App ID (e.g., XY12345-100) along with your Access Token.',
+        };
+      }
+
+      logger.info(`Sending validation query to Fyers API with header format: ${authHeader.substring(0, 15)}...`);
+
       const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
         params: { symbols: 'NSE:NIFTY50-INDEX' },
         headers: { Authorization: authHeader },
-        timeout: 6000,
+        timeout: 8000,
       });
 
       if (response.data && (response.data.s === 'ok' || Array.isArray(response.data.d))) {
@@ -50,6 +61,7 @@ export class FyersClient {
       }
 
       const errMsg = response.data?.errmsg || response.data?.message || 'Invalid or expired Fyers Access Token';
+      logger.warn(`Fyers API quote validation returned error: ${JSON.stringify(response.data)}`);
       return { valid: false, message: errMsg };
     } catch (err: any) {
       const msg = err.response?.data?.errmsg || err.response?.data?.message || err.message || 'Token validation failed';
@@ -67,13 +79,13 @@ export class FyersClient {
     secretKey?: string
   ): Promise<{ success: boolean; accessToken?: string; message?: string }> {
     try {
-      const activeClientId = clientId || config.FYERS.CLIENT_ID;
-      const activeSecretKey = secretKey || config.FYERS.SECRET_KEY;
+      const activeClientId = clientId?.trim() || config.FYERS.CLIENT_ID;
+      const activeSecretKey = secretKey?.trim() || config.FYERS.SECRET_KEY;
 
       if (!activeClientId || !activeSecretKey) {
         return {
           success: false,
-          message: 'Fyers Client ID and Secret Key are required to convert an Auth Code into an Access Token.',
+          message: 'Fyers App ID and Secret Key are required to convert an Auth Code into an Access Token.',
         };
       }
 
@@ -85,7 +97,7 @@ export class FyersClient {
         {
           grant_type: 'authorization_code',
           appIdHash: appIdHash,
-          code: authCode,
+          code: authCode.trim(),
         },
         { timeout: 8000 }
       );
@@ -113,7 +125,6 @@ export class FyersClient {
     const authHeader = this.formatAuthHeader(token);
     const results: Record<string, NormalizedQuote> = {};
 
-    // Batch symbols in chunks of 40 (Fyers supports up to 50 per call)
     const chunkSize = 40;
     for (let i = 0; i < symbols.length; i += chunkSize) {
       const chunk = symbols.slice(i, i + chunkSize);
@@ -123,7 +134,7 @@ export class FyersClient {
         const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
           params: { symbols: symbolString },
           headers: { Authorization: authHeader },
-          timeout: 6000,
+          timeout: 8000,
         });
 
         if (response.data && response.data.s === 'ok' && Array.isArray(response.data.d)) {
@@ -172,8 +183,8 @@ export class FyersClient {
   async getHistory(
     symbol: string,
     resolution: string,
-    rangeFrom: string, // YYYY-MM-DD
-    rangeTo: string,   // YYYY-MM-DD
+    rangeFrom: string,
+    rangeTo: string,
     token: string
   ): Promise<any[]> {
     try {

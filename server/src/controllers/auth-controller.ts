@@ -124,7 +124,7 @@ export class AuthController {
 
       if (!clientID) {
         return res.status(400).json({
-          error: { message: 'Fyers Client ID is not configured on server. Please use Direct Access Token input below.' }
+          error: { message: 'Fyers Client ID is not configured on server env. Please use Direct Token Input below with your App ID and Access Token.' }
         });
       }
 
@@ -165,7 +165,8 @@ export class AuthController {
       const { access_token, refresh_token } = response.data;
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      await sessionRepository.upsert(userId as string, access_token, refresh_token || null, expiresAt);
+      const fullToken = `${config.FYERS.CLIENT_ID}:${access_token}`;
+      await sessionRepository.upsert(userId as string, fullToken, refresh_token || null, expiresAt);
 
       logger.info(`Fyers Access Token successfully established and stored for user: ${userId}`);
       return res.redirect(`${config.FRONTEND_URL}/dashboard?fyers=connected`);
@@ -186,31 +187,49 @@ export class AuthController {
 
       const { token, clientId, secretKey } = req.body;
       if (!token || typeof token !== 'string' || token.trim().length < 5) {
-        return res.status(400).json({ error: { message: 'Please enter a valid Fyers Access Token or Auth Code' } });
+        return res.status(400).json({ error: { message: 'Please enter your Fyers Access Token or Auth Code' } });
       }
 
       const trimmedInput = token.trim();
-      const activeClientId = clientId?.trim() || config.FYERS.CLIENT_ID;
-      const activeSecretKey = secretKey?.trim() || config.FYERS.SECRET_KEY;
+      let extractedClientId = clientId?.trim() || config.FYERS.CLIENT_ID;
+      let rawAccessToken = trimmedInput;
 
-      let combinedToken = trimmedInput;
-      if (!trimmedInput.includes(':') && activeClientId) {
-        combinedToken = `${activeClientId}:${trimmedInput}`;
+      if (trimmedInput.includes(':')) {
+        const parts = trimmedInput.split(':');
+        extractedClientId = parts[0].trim();
+        rawAccessToken = parts.slice(1).join(':').trim();
       }
 
-      logger.info(`Validating Fyers token input for user ${req.user.id}...`);
+      if (!extractedClientId) {
+        return res.status(400).json({
+          error: { message: 'Fyers App ID / Client ID is required (e.g., XY12345-100). Please enter your App ID in the App ID field.' }
+        });
+      }
+
+      const combinedToken = `${extractedClientId}:${rawAccessToken}`;
+      const activeSecretKey = secretKey?.trim() || config.FYERS.SECRET_KEY;
+
+      logger.info(`Validating Fyers token input for user ${req.user.id}... (App ID: ${extractedClientId})`);
 
       // 1. Try validating as a direct Access Token
-      let validation = await fyersClient.validateAccessToken(combinedToken);
+      let validation = await fyersClient.validateAccessToken(combinedToken, extractedClientId);
 
-      // 2. If direct check failed, try converting it as an Auth Code using validate-authcode
-      if (!validation.valid) {
+      // 2. If direct check failed, try converting rawAccessToken as an Auth Code
+      if (!validation.valid && activeSecretKey) {
         logger.info(`Direct token validation failed. Attempting Auth Code conversion for user ${req.user.id}...`);
-        const exchangeResult = await fyersClient.exchangeAuthCode(trimmedInput, activeClientId, activeSecretKey);
+        const exchangeResult = await fyersClient.exchangeAuthCode(rawAccessToken, extractedClientId, activeSecretKey);
 
         if (exchangeResult.success && exchangeResult.accessToken) {
-          combinedToken = exchangeResult.accessToken;
-          validation = await fyersClient.validateAccessToken(combinedToken);
+          const newCombinedToken = exchangeResult.accessToken;
+          validation = await fyersClient.validateAccessToken(newCombinedToken, extractedClientId);
+          if (validation.valid) {
+            await sessionRepository.upsert(req.user.id, newCombinedToken, null, new Date(Date.now() + 24 * 60 * 60 * 1000));
+            return res.json({
+              success: true,
+              connected: true,
+              message: 'Fyers Auth Code converted & session connected successfully!',
+            });
+          }
         } else if (exchangeResult.message) {
           validation = { valid: false, message: exchangeResult.message };
         }
@@ -221,7 +240,7 @@ export class AuthController {
           error: {
             message:
               validation.message ||
-              'Token validation failed. Verify your Fyers Access Token, App ID, or Secret Key.',
+              'Token validation failed. Verify your Fyers App ID (e.g., XY12345-100) and Access Token generated today.',
           },
         });
       }
@@ -240,7 +259,6 @@ export class AuthController {
       return res.status(500).json({ error: { message: err.message || 'Internal server error while saving Fyers token' } });
     }
   }
-
 
   async getFyersSession(req: AuthenticatedRequest, res: Response) {
     try {
