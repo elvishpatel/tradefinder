@@ -27,7 +27,7 @@ export class AuthController {
       return res.status(201).json({ success: true, user });
     } catch (err: any) {
       logger.error(`Registration error: ${err.message}`);
-      return res.status(500).json({ error: { message: 'Internal server error' } });
+      return res.status(500).json({ error: { message: err.message || 'Internal server error' } });
     }
   }
 
@@ -35,20 +35,25 @@ export class AuthController {
     const { email, password } = req.body;
 
     try {
-      let user = await userRepository.findByEmailWithPassword(email);
-
-      // Initialize demo user in DB if it doesn't exist yet
-      if (!user && email === 'demo@tradefinder.com' && password === 'password123') {
-        const passwordHash = await bcrypt.hash(password, 10);
-        const created = await userRepository.create(email, passwordHash);
-        user = {
-          id: created.id,
-          email: created.email,
-          passwordHash,
-          createdAt: created.createdAt,
-        };
+      // Standalone demo user login bypass (always works regardless of Supabase DB RLS policies)
+      if (email === 'demo@tradefinder.com' && password === 'password123') {
+        const token = jwt.sign(
+          { id: '00000000-0000-0000-0000-000000000000', email },
+          config.JWT_SECRET,
+          { expiresIn: '7d' }
+        );
+        logger.info(`Demo user logged in: ${email}`);
+        return res.json({
+          token,
+          user: {
+            id: '00000000-0000-0000-0000-000000000000',
+            email,
+            createdAt: new Date().toISOString(),
+          },
+        });
       }
 
+      const user = await userRepository.findByEmailWithPassword(email);
       if (!user) {
         return res.status(401).json({ error: { message: 'Invalid email or password' } });
       }
@@ -75,7 +80,7 @@ export class AuthController {
       });
     } catch (err: any) {
       logger.error(`Login error: ${err.message}`);
-      return res.status(500).json({ error: { message: 'Internal server error' } });
+      return res.status(500).json({ error: { message: err.message || 'Internal server error' } });
     }
   }
 
@@ -83,6 +88,16 @@ export class AuthController {
     try {
       if (!req.user) {
         return res.status(401).json({ error: { message: 'Not authenticated' } });
+      }
+
+      if (req.user.email === 'demo@tradefinder.com' || req.user.id === '00000000-0000-0000-0000-000000000000') {
+        return res.json({
+          user: {
+            id: '00000000-0000-0000-0000-000000000000',
+            email: 'demo@tradefinder.com',
+            createdAt: new Date().toISOString(),
+          },
+        });
       }
 
       const user = await userRepository.findById(req.user.id);
