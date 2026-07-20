@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Workflow, ShieldAlert, KeyRound, Loader2, LogOut, CheckCircle2, Zap, Link2, ExternalLink, HelpCircle } from 'lucide-react';
+import { Workflow, ShieldAlert, KeyRound, Loader2, LogOut, CheckCircle2, Zap, Link2, ExternalLink, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ export const FyersConnect: React.FC = () => {
   const [tokenInput, setTokenInput] = useState('');
   const [clientIdInput, setClientIdInput] = useState('');
   const [secretKeyInput, setSecretKeyInput] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export const FyersConnect: React.FC = () => {
               }`}
             >
               <Zap className="w-4 h-4" />
-              Direct Token / Auth Code (Instant)
+              Direct Token Entry (Recommended)
             </button>
             <button
               onClick={() => { setActiveTab('OAUTH'); setError(null); }}
@@ -107,7 +108,7 @@ export const FyersConnect: React.FC = () => {
               }`}
             >
               <Link2 className="w-4 h-4" />
-              Fyers OAuth Login Redirect
+              Fyers OAuth Redirect
             </button>
           </div>
 
@@ -130,65 +131,69 @@ export const FyersConnect: React.FC = () => {
               <form onSubmit={handleDirectTokenSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-white uppercase tracking-wider flex justify-between">
-                    <span>Fyers Access Token OR Auth Code *</span>
+                    <span>Fyers Access Token *</span>
                     <a
                       href="https://api-t1.fyers.in/api/v3/generate-authcode"
                       target="_blank"
                       rel="noreferrer"
                       className="text-primary hover:underline flex items-center gap-1 text-[10px] lowercase"
                     >
-                      generate from Fyers <ExternalLink className="w-3 h-3" />
+                      get token from Fyers <ExternalLink className="w-3 h-3" />
                     </a>
                   </label>
                   <textarea
                     rows={3}
                     value={tokenInput}
                     onChange={(e) => setTokenInput(e.target.value)}
-                    placeholder="Paste your daily Fyers Access Token OR Auth Code here (e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6... or XY12345-100:eyJhbGci...)"
+                    placeholder="Paste your daily Fyers Access Token here (e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6... or XY12345-100:eyJhbGci...)"
                     className="w-full p-3 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
                     required
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    Just paste your Fyers Access Token above. You do NOT need a Secret Key if you paste your Access Token!
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Fyers App ID / Client ID (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={clientIdInput}
-                      onChange={(e) => setClientIdInput(e.target.value)}
-                      placeholder="e.g. XY12345-100"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
-                    />
-                  </div>
+                {/* Optional Advanced Settings Toggle */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="text-[11px] font-semibold text-muted-foreground hover:text-white flex items-center gap-1 py-1 focus:outline-none transition-colors"
+                  >
+                    {showAdvanced ? <ChevronUp className="w-3.5 h-3.5 text-primary" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    <span>{showAdvanced ? 'Hide Advanced Options' : 'Show Optional App ID & Secret Key'}</span>
+                  </button>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Fyers Secret Key (Optional)
-                    </label>
-                    <input
-                      type="password"
-                      value={secretKeyInput}
-                      onChange={(e) => setSecretKeyInput(e.target.value)}
-                      placeholder="Required only if converting Auth Code"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
-                    />
-                  </div>
-                </div>
+                  {showAdvanced && (
+                    <div className="mt-3 p-4 rounded-xl bg-[#0a0d18] border border-[#1b2238] grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Fyers App ID / Client ID (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={clientIdInput}
+                          onChange={(e) => setClientIdInput(e.target.value)}
+                          placeholder="e.g. XY12345-100"
+                          className="w-full px-4 py-2.5 rounded-xl bg-[#05070e] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                      </div>
 
-                <div className="p-3 rounded-xl bg-[#0d101d] border border-[#181f33] text-[11px] text-muted-foreground space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-white uppercase text-[10px]">
-                    <HelpCircle className="w-3.5 h-3.5 text-primary" />
-                    How Token Validation Works
-                  </div>
-                  <p>
-                    - If you enter a final <strong>Access Token</strong>, it connects directly.
-                  </p>
-                  <p>
-                    - If you enter an <strong>Auth Code</strong>, provide your Secret Key above and the server will automatically convert it into an Access Token!
-                  </p>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Fyers Secret Key (Optional)
+                        </label>
+                        <input
+                          type="password"
+                          value={secretKeyInput}
+                          onChange={(e) => setSecretKeyInput(e.target.value)}
+                          placeholder="Only needed if converting an Auth Code"
+                          className="w-full px-4 py-2.5 rounded-xl bg-[#05070e] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row gap-3">
@@ -200,7 +205,7 @@ export const FyersConnect: React.FC = () => {
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Validating Fyers Feed...
+                        Validating Fyers Token...
                       </>
                     ) : (
                       <>
