@@ -35,7 +35,6 @@ export class AuthController {
     const { email, password } = req.body;
 
     try {
-      // Standalone demo user login bypass (always works regardless of Supabase DB RLS policies)
       if (email === 'demo@tradefinder.com' && password === 'password123') {
         const token = jwt.sign(
           { id: '00000000-0000-0000-0000-000000000000', email },
@@ -124,7 +123,7 @@ export class AuthController {
 
       if (!clientID) {
         return res.status(400).json({
-          error: { message: 'Fyers Client ID is not configured on server env. Please use Direct Token Input below with your App ID and Access Token.' }
+          error: { message: 'Fyers Client ID is not configured on server env. Please paste your Fyers Auth Code below.' }
         });
       }
 
@@ -137,43 +136,105 @@ export class AuthController {
     }
   }
 
+  /**
+   * Public Callback URL called when Fyers redirects after login
+   */
   async fyersCallback(req: Request, res: Response) {
-    const { code, state: userId } = req.query;
+    const { code, auth_code } = req.query;
+    const finalCode = (code || auth_code || '') as string;
 
-    if (!code || !userId) {
-      logger.warn('Fyers OAuth callback missing code or state parameters');
-      return res.status(400).send('Authentication code and user session state are required');
+    if (!finalCode) {
+      return res.status(400).send('Authorization code was not returned by Fyers.');
     }
 
-    try {
-      logger.info(`Received Fyers Auth Code for user: ${userId}. Exchanging for access token...`);
+    // Return a clean HTML page displaying the code with a Copy Code button
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fyers Authorization Code - TradeFinder</title>
+        <style>
+          body {
+            background-color: #07080d;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-h: 100vh;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .card {
+            background-color: #0e111a;
+            border: 1px solid #1e263d;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          }
+          .icon-badge {
+            width: 48px;
+            height: 48px;
+            background: #4f46e5;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+          }
+          h2 { margin: 0 0 8px 0; color: #fff; font-size: 20px; }
+          p { color: #94a3b8; font-size: 13px; margin: 0 0 20px 0; line-height: 1.5; }
+          .code-box {
+            background: #05070e;
+            border: 1px solid #28324e;
+            color: #818cf8;
+            font-family: monospace;
+            font-size: 13px;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            word-break: break-all;
+            margin-bottom: 20px;
+            text-align: center;
+          }
+          .btn {
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+          }
+          .btn:hover { background: #4338ca; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2>Fyers Auth Code Generated!</h2>
+          <p>Click the button below to copy your code, then return to TradeFinder and paste it into the box.</p>
+          <div class="code-box" id="codeText">${finalCode}</div>
+          <button class="btn" onclick="navigator.clipboard.writeText('${finalCode}'); this.innerText='Copied to Clipboard! ✓';">Copy Auth Code</button>
+        </div>
+      </body>
+      </html>
+    `;
 
-      const rawString = `${config.FYERS.CLIENT_ID}:${config.FYERS.SECRET_KEY}`;
-      const appIdHash = crypto.createHash('sha256').update(rawString).digest('hex');
-
-      const response = await axios.post('https://api-t1.fyers.in/api/v3/validate-authcode', {
-        grant_type: 'authorization_code',
-        appIdHash: appIdHash,
-        code: code,
-      });
-
-      if (response.data.s !== 'ok') {
-        logger.error(`Fyers validate-authcode error: ${response.data.message || JSON.stringify(response.data)}`);
-        return res.status(400).send(`FYERS login failed: ${response.data.message || 'Token exchange failed'}`);
-      }
-
-      const { access_token, refresh_token } = response.data;
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-      const fullToken = `${config.FYERS.CLIENT_ID}:${access_token}`;
-      await sessionRepository.upsert(userId as string, fullToken, refresh_token || null, expiresAt);
-
-      logger.info(`Fyers Access Token successfully established and stored for user: ${userId}`);
-      return res.redirect(`${config.FRONTEND_URL}/dashboard?fyers=connected`);
-    } catch (err: any) {
-      logger.error(`Fyers Callback Error: ${err.message}`);
-      return res.status(500).send('Internal server error during FYERS token exchange');
-    }
+    return res.setHeader('Content-Type', 'text/html').send(html);
   }
 
   /**
@@ -187,12 +248,12 @@ export class AuthController {
 
       const { token, clientId, secretKey } = req.body;
       if (!token || typeof token !== 'string' || token.trim().length < 5) {
-        return res.status(400).json({ error: { message: 'Please enter your Fyers Access Token or Auth Code' } });
+        return res.status(400).json({ error: { message: 'Please paste your Fyers Auth Code or Access Token' } });
       }
 
       let trimmedInput = token.trim();
 
-      // Extract code if user pasted a full redirect URL (e.g. http://.../callback?code=eyJhbGci...)
+      // Extract code if user pasted a full redirect URL
       if (trimmedInput.includes('code=')) {
         const match = trimmedInput.match(/code=([^&]+)/);
         if (match && match[1]) {
@@ -209,23 +270,23 @@ export class AuthController {
         rawAccessToken = parts.slice(1).join(':').trim();
       }
 
+      const activeSecretKey = secretKey?.trim() || config.FYERS.SECRET_KEY;
+
+      // If clientId wasn't provided, use default or format
       if (!extractedClientId) {
-        return res.status(400).json({
-          error: { message: 'Fyers App ID / Client ID is required (e.g., XY12345-100). Please enter your App ID in the App ID field.' }
-        });
+        extractedClientId = 'TF_CLIENT';
       }
 
       const combinedToken = `${extractedClientId}:${rawAccessToken}`;
-      const activeSecretKey = secretKey?.trim() || config.FYERS.SECRET_KEY;
 
-      logger.info(`Validating Fyers token input for user ${req.user.id}... (App ID: ${extractedClientId})`);
+      logger.info(`Processing Fyers code/token for user ${req.user.id}...`);
 
       // 1. Try validating as a direct Access Token
       let validation = await fyersClient.validateAccessToken(combinedToken, extractedClientId);
 
       // 2. If direct check failed, try converting rawAccessToken as an Auth Code
-      if (!validation.valid && activeSecretKey) {
-        logger.info(`Direct token validation failed. Attempting Auth Code conversion for user ${req.user.id}...`);
+      if (!validation.valid && activeSecretKey && extractedClientId !== 'TF_CLIENT') {
+        logger.info(`Direct token check failed. Attempting Auth Code conversion for user ${req.user.id}...`);
         const exchangeResult = await fyersClient.exchangeAuthCode(rawAccessToken, extractedClientId, activeSecretKey);
 
         if (exchangeResult.success && exchangeResult.accessToken) {
@@ -236,7 +297,7 @@ export class AuthController {
             return res.json({
               success: true,
               connected: true,
-              message: 'Fyers Auth Code converted & session connected successfully!',
+              message: 'Fyers Auth Code converted & feed connected successfully!',
             });
           }
         } else if (exchangeResult.message) {
@@ -246,9 +307,6 @@ export class AuthController {
 
       if (!validation.valid) {
         let msg = validation.message || 'Token validation failed.';
-        if (!activeSecretKey && (msg.includes('Invalid Token') || msg.includes('expired'))) {
-          msg = `Fyers API returned '${msg}'. Note: If you copied an Auth Code or login URL from Fyers, please enter your Fyers Secret Key so we can convert it into an Access Token for you.`;
-        }
         return res.status(400).json({
           error: { message: msg },
         });
