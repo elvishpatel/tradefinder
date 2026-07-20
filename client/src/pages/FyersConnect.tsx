@@ -4,6 +4,7 @@ import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
+// Build Version: 2.1.0 - Clean 2-Step Fyers Connection Flow
 export const FyersConnect: React.FC = () => {
   const [tokenInput, setTokenInput] = useState('');
   const [clientIdInput, setClientIdInput] = useState('');
@@ -26,7 +27,6 @@ export const FyersConnect: React.FC = () => {
         throw new Error('Fyers OAuth URL was not returned');
       }
     } catch (err: any) {
-      // If server env is missing, open sample redirect URI directly
       const sampleUrl = 'https://api-t1.fyers.in/api/v3/generate-authcode?client_id=SAMPLE_APP_ID&redirect_uri=https://tradefinder-zvp0.onrender.com/api/v1/auth/fyers/callback&response_type=code';
       window.open(sampleUrl, '_blank');
     }
