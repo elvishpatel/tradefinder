@@ -7,6 +7,7 @@ import config from '../config';
 import logger from '../utils/logger';
 import userRepository from '../repositories/user-repository';
 import sessionRepository from '../repositories/session-repository';
+import fyersClient from '../services/fyers-client';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 export class AuthController {
@@ -34,36 +35,31 @@ export class AuthController {
     const { email, password } = req.body;
 
     try {
-      // Local demo profile bypass for standalone preview
-      if (email === 'demo@tradefinder.com' && password === 'password123') {
-        const token = jwt.sign(
-          { id: '00000000-0000-0000-0000-000000000000', email },
-          config.JWT_SECRET,
-          { expiresIn: '7d' }
-        );
-        logger.info(`Demo user logged in: ${email}`);
-        return res.json({
-          token,
-          user: {
-            id: '00000000-0000-0000-0000-000000000000',
-            email,
-            createdAt: new Date().toISOString(),
-          },
-        });
+      let user = await userRepository.findByEmailWithPassword(email);
+
+      // Initialize demo user in DB if it doesn't exist yet
+      if (!user && email === 'demo@tradefinder.com' && password === 'password123') {
+        const passwordHash = await bcrypt.hash(password, 10);
+        const created = await userRepository.create(email, passwordHash);
+        user = {
+          id: created.id,
+          email: created.email,
+          passwordHash,
+          createdAt: created.createdAt,
+        };
       }
 
-      const userWithPw = await userRepository.findByEmailWithPassword(email);
-      if (!userWithPw) {
+      if (!user) {
         return res.status(401).json({ error: { message: 'Invalid email or password' } });
       }
 
-      const match = await bcrypt.compare(password, userWithPw.passwordHash);
+      const match = await bcrypt.compare(password, user.passwordHash);
       if (!match) {
         return res.status(401).json({ error: { message: 'Invalid email or password' } });
       }
 
       const token = jwt.sign(
-        { id: userWithPw.id, email: userWithPw.email },
+        { id: user.id, email: user.email },
         config.JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -72,9 +68,9 @@ export class AuthController {
       return res.json({
         token,
         user: {
-          id: userWithPw.id,
-          email: userWithPw.email,
-          createdAt: userWithPw.createdAt,
+          id: user.id,
+          email: user.email,
+          createdAt: user.createdAt,
         },
       });
     } catch (err: any) {
@@ -88,18 +84,12 @@ export class AuthController {
       if (!req.user) {
         return res.status(401).json({ error: { message: 'Not authenticated' } });
       }
-      
-      if (req.user.email === 'demo@tradefinder.com') {
-        return res.json({
-          user: {
-            id: '00000000-0000-0000-0000-000000000000',
-            email: 'demo@tradefinder.com',
-            createdAt: new Date().toISOString()
-          }
-        });
-      }
 
       const user = await userRepository.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: { message: 'User not found' } });
+      }
+
       return res.json({ user });
     } catch (err: any) {
       logger.error(`Me error: ${err.message}`);
@@ -115,9 +105,14 @@ export class AuthController {
 
       const clientID = config.FYERS.CLIENT_ID;
       const redirectURI = encodeURIComponent(config.FYERS.REDIRECT_URI);
-      const state = req.user.id; // User ID carries over to verify the session association
+      const state = req.user.id;
 
-      // Standard Fyers OAuth 2.0 Auth Link
+      if (!clientID) {
+        return res.status(400).json({
+          error: { message: 'Fyers Client ID is not configured on server. Please use Direct Access Token input below.' }
+        });
+      }
+
       const fyersAuthUrl = `https://api-t1.fyers.in/api/v3/generate-authcode?client_id=${clientID}&redirect_uri=${redirectURI}&response_type=code&state=${state}`;
 
       return res.json({ url: fyersAuthUrl });
@@ -138,11 +133,9 @@ export class AuthController {
     try {
       logger.info(`Received Fyers Auth Code for user: ${userId}. Exchanging for access token...`);
 
-      // Build AppIdHash: SHA256 of appId + ":" + secretKey
       const rawString = `${config.FYERS.CLIENT_ID}:${config.FYERS.SECRET_KEY}`;
       const appIdHash = crypto.createHash('sha256').update(rawString).digest('hex');
 
-      // Swap auth_code for access_token
       const response = await axios.post('https://api-t1.fyers.in/api/v3/validate-authcode', {
         grant_type: 'authorization_code',
         appIdHash: appIdHash,
@@ -155,23 +148,62 @@ export class AuthController {
       }
 
       const { access_token, refresh_token } = response.data;
-
-      // Access tokens are valid for 24h. We set expiration to 24h from now.
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      // Save encrypted session tokens
       await sessionRepository.upsert(userId as string, access_token, refresh_token || null, expiresAt);
 
       logger.info(`Fyers Access Token successfully established and stored for user: ${userId}`);
-
-      // Redirect back to frontend dashboard
       return res.redirect(`${config.FRONTEND_URL}/dashboard?fyers=connected`);
     } catch (err: any) {
       logger.error(`Fyers Callback Error: ${err.message}`);
-      if (err.response) {
-        logger.error(`Fyers Callback Error API Response: ${JSON.stringify(err.response.data)}`);
-      }
       return res.status(500).send('Internal server error during FYERS token exchange');
+    }
+  }
+
+  /**
+   * Save a directly entered Fyers Access Token (and optional Client ID)
+   */
+  async saveDirectFyersToken(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: { message: 'Not authenticated' } });
+      }
+
+      const { token, clientId } = req.body;
+      if (!token || typeof token !== 'string' || token.trim().length < 10) {
+        return res.status(400).json({ error: { message: 'Please enter a valid Fyers Access Token' } });
+      }
+
+      const trimmedToken = token.trim();
+      let combinedToken = trimmedToken;
+
+      if (!trimmedToken.includes(':') && clientId && clientId.trim()) {
+        combinedToken = `${clientId.trim()}:${trimmedToken}`;
+      } else if (!trimmedToken.includes(':') && config.FYERS.CLIENT_ID) {
+        combinedToken = `${config.FYERS.CLIENT_ID}:${trimmedToken}`;
+      }
+
+      logger.info(`Validating direct Fyers Access Token for user ${req.user.id}...`);
+
+      const validation = await fyersClient.validateAccessToken(combinedToken);
+      if (!validation.valid) {
+        return res.status(400).json({
+          error: { message: validation.message || 'Token validation failed. Please verify your Fyers App ID and Access Token.' }
+        });
+      }
+
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await sessionRepository.upsert(req.user.id, combinedToken, null, expiresAt);
+
+      logger.info(`Successfully validated and stored direct Fyers token for user ${req.user.id}`);
+      return res.json({
+        success: true,
+        connected: true,
+        message: 'Fyers Live Market Session connected successfully!',
+      });
+    } catch (err: any) {
+      logger.error(`Save direct Fyers token error: ${err.message}`);
+      return res.status(500).json({ error: { message: 'Internal server error while saving Fyers token' } });
     }
   }
 
@@ -181,23 +213,13 @@ export class AuthController {
         return res.status(401).json({ error: { message: 'Not authenticated' } });
       }
 
-      if (req.user.email === 'demo@tradefinder.com') {
-        return res.json({
-          connected: true,
-          session: {
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            isValid: true,
-          },
-        });
-      }
-
       const session = await sessionRepository.findByUserId(req.user.id);
-      if (!session) {
+      if (!session || !session.isValid) {
         return res.json({ connected: false });
       }
 
       return res.json({
-        connected: session.isValid,
+        connected: true,
         session: {
           expiresAt: session.expiresAt,
           isValid: session.isValid,

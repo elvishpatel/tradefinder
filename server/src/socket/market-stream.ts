@@ -2,13 +2,15 @@ import { Server } from 'socket.io';
 import marketEngine from '../engines/market-engine';
 import logger from '../utils/logger';
 import sessionRepository from '../repositories/session-repository';
-import config from '../config';
+import fyersClient from '../services/fyers-client';
+import supabase from '../config/supabase';
 
 export class MarketStream {
   private io: Server;
   private isStreaming = false;
   private timer: NodeJS.Timeout | null = null;
-  private simulatedInterval = 1000; // Broadcast every 1s
+  private pollInterval = 2500; // Poll live quotes every 2.5 seconds
+  private lastFyersFetchSuccess = false;
 
   constructor(io: Server) {
     this.io = io;
@@ -18,11 +20,10 @@ export class MarketStream {
     if (this.isStreaming) return;
     this.isStreaming = true;
 
-    logger.info('Starting Market Live Streams...');
+    logger.info('Starting Market Live Stream Engine...');
 
-    // 1. Bootstrap MarketEngine data cache (passing a mock user ID if needed to read db)
-    // We can fetch the first user from the DB to bootstrap, or skip user credentials for initial seed
-    const { data: user } = await require('../config/supabase').default
+    // 1. Bootstrap MarketEngine data cache
+    const { data: user } = await supabase
       .from('users')
       .select('id')
       .limit(1)
@@ -31,54 +32,100 @@ export class MarketStream {
     const userId = user?.id || '';
     await marketEngine.initialize(userId);
 
-    // 2. Start streaming updates
-    // In production, we connect to Fyers WebSocket using standard 'ws' package.
-    // If connection fails, or no user has connected Fyers yet, we fall back to simulated tick streams.
+    // 2. Start polling real market feed
     this.startStreamingFeed();
   }
 
+  private async fetchActiveFyersToken(): Promise<string | null> {
+    try {
+      // Find any non-expired session in DB
+      const { data, error } = await supabase
+        .from('fyers_sessions')
+        .select('user_id, access_token, expires_at')
+        .gt('expires_at', new Date().toISOString())
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !data) return null;
+
+      const session = await sessionRepository.findByUserId(data.user_id);
+      if (session && session.isValid && session.accessToken) {
+        return session.accessToken;
+      }
+      return null;
+    } catch (err: any) {
+      logger.error(`Error querying active Fyers token: ${err.message}`);
+      return null;
+    }
+  }
+
   private startStreamingFeed() {
-    logger.info('Initiating Real-time Broadcast Loops (Simulated Market Data Fallback active)');
+    logger.info('Initiating Real-time Fyers Market Polling Loop...');
 
-    this.timer = setInterval(() => {
-      // Simulate minor price fluctuations (market ticking) for all stocks in the universe
-      const stocksData = (marketEngine as any).stocksCache;
-      
-      stocksData.forEach((stk: any) => {
-        // Fluctuates price by -0.15% to +0.17% to simulate active bid-ask spreads
-        const drift = (Math.random() * 0.32 - 0.15) / 100;
-        const newClose = stk.close * (1 + drift);
-        const change = newClose - stk.prevClose;
-        const changePercent = (change / stk.prevClose) * 100;
-        const tickVolume = stk.volume + Math.floor(Math.random() * 5000 + 100);
+    this.timer = setInterval(async () => {
+      const activeToken = await this.fetchActiveFyersToken();
 
-        marketEngine.updateTick(
-          stk.symbol,
-          newClose,
-          change,
-          changePercent,
-          tickVolume
-        );
-      });
+      if (!activeToken) {
+        if (this.lastFyersFetchSuccess) {
+          logger.warn('[MARKET STREAM] Fyers session disconnected or expired. Waiting for token connection...');
+          this.lastFyersFetchSuccess = false;
+        }
 
-      // Fluctuate indices too
-      const indices = (marketEngine as any).liveIndices;
-      Object.keys(indices).forEach((sym) => {
-        const idx = indices[sym];
-        const drift = (Math.random() * 0.1 - 0.05) / 100;
-        const newPrice = idx.price * (1 + drift);
-        const change = newPrice - idx.prevClose;
-        const changePercent = (change / idx.prevClose) * 100;
-        marketEngine.updateIndex(sym, newPrice, change, changePercent);
-      });
+        // Notify connected clients that Fyers token is required
+        this.io.emit('feed-status', {
+          connected: false,
+          message: 'Fyers API Access Token Required for Live Data',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
 
-      // Broadcast latest data to all Socket.IO clients
-      this.io.emit('dashboard-update', marketEngine.getDashboardData());
-      this.io.emit('sectors-update', marketEngine.getSectorAnalysisList());
-      this.io.emit('scanner-update-long', marketEngine.getScannerResults('LONG'));
-      this.io.emit('scanner-update-short', marketEngine.getScannerResults('SHORT'));
+      // Collect all symbols to poll
+      const stockSymbols = Array.from((marketEngine as any).stocksCache.keys());
+      const indexSymbols = Object.keys((marketEngine as any).liveIndices || {});
+      const allSymbols = Array.from(new Set([...indexSymbols, ...stockSymbols])) as string[];
 
-    }, this.simulatedInterval);
+
+      if (allSymbols.length === 0) return;
+
+      try {
+        // Fetch REAL quotes from Fyers API
+        const realQuotes = await fyersClient.getQuotesWithToken(allSymbols, activeToken);
+        const quoteCount = Object.keys(realQuotes).length;
+
+        if (quoteCount > 0) {
+          if (!this.lastFyersFetchSuccess) {
+            logger.info(`[LIVE FYERS FEED] Successfully established live quotes stream (${quoteCount} symbols synced)`);
+            this.lastFyersFetchSuccess = true;
+          }
+
+          // Update MarketEngine with REAL Fyers price ticks
+          Object.values(realQuotes).forEach((q) => {
+            if (q.symbol.endsWith('-INDEX')) {
+              marketEngine.updateIndex(q.symbol, q.price, q.change, q.changePercent);
+            } else {
+              marketEngine.updateTick(q.symbol, q.price, q.change, q.changePercent, q.volume);
+            }
+          });
+
+          // Broadcast updated REAL market metrics to clients
+          this.io.emit('feed-status', {
+            connected: true,
+            message: 'Live Fyers Data Stream Active',
+            timestamp: new Date().toISOString(),
+          });
+          this.io.emit('dashboard-update', marketEngine.getDashboardData());
+          this.io.emit('sectors-update', marketEngine.getSectorAnalysisList());
+          this.io.emit('scanner-update-long', marketEngine.getScannerResults('LONG'));
+          this.io.emit('scanner-update-short', marketEngine.getScannerResults('SHORT'));
+        } else {
+          logger.warn('[MARKET STREAM] Fyers API returned empty quotes object. Token may be invalid.');
+        }
+      } catch (err: any) {
+        logger.error(`[MARKET STREAM ERROR] Failed to fetch quotes from Fyers: ${err.message}`);
+      }
+    }, this.pollInterval);
   }
 
   stop() {

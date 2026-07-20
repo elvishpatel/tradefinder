@@ -32,7 +32,9 @@ router.get('/me', authGuard, authController.me);
 // Fyers Integration Routes
 router.get('/fyers/url', authGuard, authController.getFyersUrl);
 router.get('/fyers/session', authGuard, authController.getFyersSession);
+router.post('/fyers/direct-token', authGuard, authController.saveDirectFyersToken);
 router.post('/fyers/disconnect', authGuard, authController.disconnectFyers);
+
 
 // Public Fyers OAuth Callback (invoked by FYERS authorization server redirect)
 router.get('/fyers/callback', authController.fyersCallback);

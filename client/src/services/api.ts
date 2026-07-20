@@ -1,9 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://tradefinder-zvp0.onrender.com/api/v1';
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:5000/api/v1';
+    }
+  }
+  return 'https://tradefinder-zvp0.onrender.com/api/v1';
+};
 
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,7 +35,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('tf_token');
-      // If we are on client side, we can redirect or trigger state changes
       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
         window.location.href = '/login';
       }

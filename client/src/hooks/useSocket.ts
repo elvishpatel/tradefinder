@@ -3,7 +3,15 @@ import { io, Socket } from 'socket.io-client';
 import useMarketStore from '../store/marketStore';
 import useAuthStore from '../store/authStore';
 
-const SOCKET_SERVER_URL = 'https://tradefinder-zvp0.onrender.com';
+const getSocketUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
+  }
+  return 'https://tradefinder-zvp0.onrender.com';
+};
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -17,8 +25,8 @@ export const useSocket = () => {
   } = useMarketStore();
 
   useEffect(() => {
-    // Only establish WebSocket connection if user is logged in and Fyers broker is linked
-    if (!token || !fyersConnected) {
+    // Establish WebSocket connection if user is logged in
+    if (!token) {
       if (socket) {
         socket.disconnect();
         setSocket(null);
@@ -27,14 +35,17 @@ export const useSocket = () => {
       return;
     }
 
-    const socketInstance = io(SOCKET_SERVER_URL, {
-      transports: ['websocket'],
+    const socketUrl = getSocketUrl();
+    const socketInstance = io(socketUrl, {
+      transports: ['websocket', 'polling'],
       auth: { token },
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
     });
 
     socketInstance.on('connect', () => {
       setConnected(true);
-      console.log('Socket.IO connection established with backend:', socketInstance.id);
+      console.log('Socket.IO live feed connected:', socketInstance.id);
     });
 
     socketInstance.on('disconnect', () => {

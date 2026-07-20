@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
-import { User } from '@shared/types';
+import { User } from '../types';
 
 interface AuthState {
   user: User | null;
@@ -12,6 +12,7 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => Promise<boolean>;
   checkFyersSession: () => Promise<boolean>;
+  saveDirectFyersToken: (token: string, clientId?: string) => Promise<boolean>;
   disconnectFyers: () => Promise<void>;
 }
 
@@ -68,6 +69,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err) {
       set({ fyersConnected: false, fyersSession: null });
       return false;
+    }
+  },
+
+  saveDirectFyersToken: async (token: string, clientId?: string) => {
+    try {
+      const response = await api.post('/auth/fyers/direct-token', { token, clientId });
+      if (response.data.connected || response.data.success) {
+        set({
+          fyersConnected: true,
+          fyersSession: {
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            isValid: true,
+          },
+        });
+        return true;
+      }
+      return false;
+    } catch (err) {
+      throw err;
     }
   },
 

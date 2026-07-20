@@ -5,57 +5,133 @@ import logger from '../utils/logger';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export interface NormalizedQuote {
+  symbol: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  high: number;
+  low: number;
+  prevClose: number;
+}
+
 export class FyersClient {
-  private async getAuthHeader(userId: string): Promise<string> {
+  /**
+   * Formats the Authorization header for Fyers API v3.
+   * Format required: "CLIENT_ID:ACCESS_TOKEN"
+   */
+  public formatAuthHeader(token: string): string {
+    if (token.includes(':')) {
+      return token;
+    }
+    const clientId = config.FYERS.CLIENT_ID;
+    if (!clientId) {
+      return token;
+    }
+    return `${clientId}:${token}`;
+  }
+
+  /**
+   * Validate a Fyers Access Token by attempting to fetch Nifty 50 quote
+   */
+  async validateAccessToken(token: string): Promise<{ valid: boolean; message?: string }> {
+    try {
+      const authHeader = this.formatAuthHeader(token);
+      const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
+        params: { symbols: 'NSE:NIFTY50-INDEX' },
+        headers: { Authorization: authHeader },
+        timeout: 8000,
+      });
+
+      if (response.data && (response.data.s === 'ok' || Array.isArray(response.data.d))) {
+        return { valid: true };
+      }
+
+      const errMsg = response.data?.errmsg || response.data?.message || 'Invalid or expired Fyers Access Token';
+      return { valid: false, message: errMsg };
+    } catch (err: any) {
+      const msg = err.response?.data?.errmsg || err.response?.data?.message || err.message || 'Token validation failed';
+      logger.error(`Fyers token validation error: ${msg}`);
+      return { valid: false, message: msg };
+    }
+  }
+
+  /**
+   * Fetch live quotes for an array of symbols using a specified Access Token
+   */
+  async getQuotesWithToken(symbols: string[], token: string): Promise<Record<string, NormalizedQuote>> {
+    if (symbols.length === 0) return {};
+
+    const authHeader = this.formatAuthHeader(token);
+    const results: Record<string, NormalizedQuote> = {};
+
+    // Batch symbols in chunks of 40 (Fyers supports up to 50 per call)
+    const chunkSize = 40;
+    for (let i = 0; i < symbols.length; i += chunkSize) {
+      const chunk = symbols.slice(i, i + chunkSize);
+      const symbolString = chunk.join(',');
+
+      try {
+        const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
+          params: { symbols: symbolString },
+          headers: { Authorization: authHeader },
+          timeout: 8000,
+        });
+
+        if (response.data && response.data.s === 'ok' && Array.isArray(response.data.d)) {
+          for (const item of response.data.d) {
+            if (item && item.n && item.v) {
+              const sym = item.n;
+              const v = item.v;
+
+              results[sym] = {
+                symbol: sym,
+                price: Number(v.lp || v.cmd?.c || 0),
+                change: Number(v.ch || 0),
+                changePercent: Number(v.chp || 0),
+                volume: Number(v.volume || v.cmd?.v || 0),
+                high: Number(v.high_price || v.cmd?.h || 0),
+                low: Number(v.low_price || v.cmd?.l || 0),
+                prevClose: Number(v.prev_close_price || (v.lp ? v.lp - v.ch : 0)),
+              };
+            }
+          }
+        } else if (response.data && response.data.errmsg) {
+          logger.warn(`Fyers quotes API batch warning: ${response.data.errmsg}`);
+        }
+      } catch (err: any) {
+        logger.error(`Fyers quotes fetch error: ${err.message}`);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Fetch current quotes using a user's stored session
+   */
+  async getQuotes(symbols: string[], userId: string): Promise<Record<string, NormalizedQuote>> {
     const session = await sessionRepository.findByUserId(userId);
     if (!session || !session.isValid) {
       throw new Error(`Fyers session invalid or expired for user: ${userId}`);
     }
-    return `${config.FYERS.CLIENT_ID}:${session.accessToken}`;
+    return this.getQuotesWithToken(symbols, session.accessToken);
   }
 
   /**
-   * Fetch current quotes for a batch of symbols (limit: 50 symbols per request)
-   */
-  async getQuotes(symbols: string[], userId: string): Promise<any> {
-    if (symbols.length === 0) return {};
-
-    try {
-      const authHeader = await this.getAuthHeader(userId);
-      const symbolString = symbols.join(',');
-      
-      const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
-        params: { symbols: symbolString },
-        headers: { Authorization: authHeader },
-      });
-
-      if (response.data.s !== 'ok') {
-        throw new Error(response.data.errmsg || 'Failed to fetch quotes');
-      }
-
-      return response.data.d || {};
-    } catch (err: any) {
-      logger.error(`Fyers getQuotes error: ${err.message}`);
-      throw err;
-    }
-  }
-
-  /**
-   * Fetch historical candles for a specific symbol.
-   * resolution: 'D' for Daily, '1', '5', '15' for Intraday minutes
+   * Fetch historical daily/intraday candles for a symbol
    */
   async getHistory(
     symbol: string,
     resolution: string,
     rangeFrom: string, // YYYY-MM-DD
     rangeTo: string,   // YYYY-MM-DD
-    userId: string
+    token: string
   ): Promise<any[]> {
     try {
-      // Throttle API: sleep 150ms before historical requests to prevent rate limit blocks
       await sleep(150);
-
-      const authHeader = await this.getAuthHeader(userId);
+      const authHeader = this.formatAuthHeader(token);
 
       const response = await axios.get('https://api-t1.fyers.in/data/history', {
         params: {
@@ -66,16 +142,15 @@ export class FyersClient {
           range_to: rangeTo,
         },
         headers: { Authorization: authHeader },
+        timeout: 10000,
       });
 
-      if (response.data.s !== 'ok') {
-        // If symbol does not exist or historical data is missing
-        logger.warn(`Fyers history API warning for ${symbol}: ${response.data.errmsg || 'No data'}`);
+      if (response.data && response.data.s === 'ok') {
+        return response.data.candles || [];
+      } else {
+        logger.warn(`Fyers history warning for ${symbol}: ${response.data?.errmsg || 'No data'}`);
         return [];
       }
-
-      // Fyers returns history as an array of candles: [timestamp, open, high, low, close, volume]
-      return response.data.candles || [];
     } catch (err: any) {
       logger.error(`Fyers getHistory error for ${symbol}: ${err.message}`);
       return [];
