@@ -190,7 +190,16 @@ export class AuthController {
         return res.status(400).json({ error: { message: 'Please enter your Fyers Access Token or Auth Code' } });
       }
 
-      const trimmedInput = token.trim();
+      let trimmedInput = token.trim();
+
+      // Extract code if user pasted a full redirect URL (e.g. http://.../callback?code=eyJhbGci...)
+      if (trimmedInput.includes('code=')) {
+        const match = trimmedInput.match(/code=([^&]+)/);
+        if (match && match[1]) {
+          trimmedInput = decodeURIComponent(match[1]);
+        }
+      }
+
       let extractedClientId = clientId?.trim() || config.FYERS.CLIENT_ID;
       let rawAccessToken = trimmedInput;
 
@@ -236,12 +245,12 @@ export class AuthController {
       }
 
       if (!validation.valid) {
+        let msg = validation.message || 'Token validation failed.';
+        if (!activeSecretKey && (msg.includes('Invalid Token') || msg.includes('expired'))) {
+          msg = `Fyers API returned '${msg}'. Note: If you copied an Auth Code or login URL from Fyers, please enter your Fyers Secret Key so we can convert it into an Access Token for you.`;
+        }
         return res.status(400).json({
-          error: {
-            message:
-              validation.message ||
-              'Token validation failed. Verify your Fyers App ID (e.g., XY12345-100) and Access Token generated today.',
-          },
+          error: { message: msg },
         });
       }
 

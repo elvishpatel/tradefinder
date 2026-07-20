@@ -79,6 +79,14 @@ export class FyersClient {
     secretKey?: string
   ): Promise<{ success: boolean; accessToken?: string; message?: string }> {
     try {
+      let cleanCode = authCode.trim();
+      if (cleanCode.includes('code=')) {
+        const match = cleanCode.match(/code=([^&]+)/);
+        if (match && match[1]) {
+          cleanCode = decodeURIComponent(match[1]);
+        }
+      }
+
       const activeClientId = clientId?.trim() || config.FYERS.CLIENT_ID;
       const activeSecretKey = secretKey?.trim() || config.FYERS.SECRET_KEY;
 
@@ -92,12 +100,14 @@ export class FyersClient {
       const rawString = `${activeClientId}:${activeSecretKey}`;
       const appIdHash = crypto.createHash('sha256').update(rawString).digest('hex');
 
+      logger.info(`Sending Auth Code exchange to Fyers API for App ID: ${activeClientId}...`);
+
       const response = await axios.post(
         'https://api-t1.fyers.in/api/v3/validate-authcode',
         {
           grant_type: 'authorization_code',
           appIdHash: appIdHash,
-          code: authCode.trim(),
+          code: cleanCode,
         },
         { timeout: 8000 }
       );
@@ -108,10 +118,11 @@ export class FyersClient {
       }
 
       const msg = response.data?.message || response.data?.errmsg || 'Failed to exchange Auth Code for Access Token';
+      logger.warn(`Fyers validate-authcode response error: ${JSON.stringify(response.data)}`);
       return { success: false, message: msg };
     } catch (err: any) {
       const msg = err.response?.data?.message || err.response?.data?.errmsg || err.message || 'Auth code exchange failed';
-      logger.error(`Fyers auth code exchange error: ${msg}`);
+      logger.error(`Fyers auth code exchange exception: ${msg}`);
       return { success: false, message: msg };
     }
   }

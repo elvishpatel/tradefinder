@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Workflow, ShieldAlert, KeyRound, Loader2, LogOut, CheckCircle2, Zap, Link2, ExternalLink, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Workflow, ShieldAlert, KeyRound, Loader2, LogOut, CheckCircle2, Zap, Link2, ExternalLink, HelpCircle, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -7,9 +7,8 @@ import { useNavigate } from 'react-router-dom';
 export const FyersConnect: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'DIRECT' | 'OAUTH'>('DIRECT');
   const [clientIdInput, setClientIdInput] = useState('');
-  const [tokenInput, setTokenInput] = useState('');
   const [secretKeyInput, setSecretKeyInput] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [tokenInput, setTokenInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -20,7 +19,7 @@ export const FyersConnect: React.FC = () => {
   const handleDirectTokenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tokenInput || tokenInput.trim().length < 5) {
-      setError('Please enter your Fyers Access Token');
+      setError('Please paste your Fyers Access Token, Auth Code, or Redirect URL');
       return;
     }
 
@@ -30,7 +29,7 @@ export const FyersConnect: React.FC = () => {
 
     try {
       await saveDirectFyersToken(tokenInput.trim(), clientIdInput.trim(), secretKeyInput.trim());
-      setSuccessMsg('Fyers Live Market Session validated and connected successfully!');
+      setSuccessMsg('Fyers Live Market Feed connected successfully!');
       setTimeout(() => {
         navigate('/dashboard');
       }, 1000);
@@ -40,6 +39,18 @@ export const FyersConnect: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenFyersLogin = () => {
+    const appId = clientIdInput.trim();
+    if (!appId) {
+      setError('Please enter your Fyers App ID (e.g. XY12345-100) first to generate the login link.');
+      return;
+    }
+    setError(null);
+    const redirectUri = encodeURIComponent('https://tradefinder-zvp0.onrender.com/api/v1/auth/fyers/callback');
+    const authUrl = `https://api-t1.fyers.in/api/v3/generate-authcode?client_id=${appId}&redirect_uri=${redirectUri}&response_type=code`;
+    window.open(authUrl, '_blank');
   };
 
   const handleFyersOAuthConnect = async () => {
@@ -53,7 +64,7 @@ export const FyersConnect: React.FC = () => {
         throw new Error('Fyers OAuth redirect URL was not returned by server');
       }
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || 'Failed to initiate Fyers OAuth. Please use Direct Token Input.';
+      const msg = err.response?.data?.error?.message || 'Failed to initiate Fyers OAuth. Use the step-by-step token setup below.';
       setError(msg);
       setLoading(false);
     }
@@ -77,10 +88,10 @@ export const FyersConnect: React.FC = () => {
             <Workflow className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-wide">
-            Connect Fyers API Feed
+            Connect Fyers Broker Feed
           </h1>
           <p className="text-muted-foreground text-sm mt-1 text-center max-w-sm">
-            Required to stream live Indian stock market quotes, sector rotation, and scanner signals.
+            Stream live Indian stock market quotes, sector rotation, and scanner signals.
           </p>
         </div>
 
@@ -97,7 +108,7 @@ export const FyersConnect: React.FC = () => {
               }`}
             >
               <Zap className="w-4 h-4" />
-              Direct Credentials (Instant)
+              Easy Step-by-Step Connection
             </button>
             <button
               onClick={() => { setActiveTab('OAUTH'); setError(null); }}
@@ -108,7 +119,7 @@ export const FyersConnect: React.FC = () => {
               }`}
             >
               <Link2 className="w-4 h-4" />
-              Fyers OAuth Redirect
+              Server OAuth Redirect
             </button>
           </div>
 
@@ -128,88 +139,95 @@ export const FyersConnect: React.FC = () => {
             )}
 
             {activeTab === 'DIRECT' ? (
-              <form onSubmit={handleDirectTokenSubmit} className="space-y-4">
-                {/* 1. App ID / Client ID */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white uppercase tracking-wider flex justify-between">
-                    <span>1. Fyers App ID / Client ID *</span>
+              <form onSubmit={handleDirectTokenSubmit} className="space-y-5">
+                {/* STEP 1: App ID & Secret Key */}
+                <div className="space-y-3 p-4 rounded-xl bg-[#090c17] border border-[#161d33]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[11px]">1</span>
+                      Your Fyers App Credentials
+                    </span>
                     <a
                       href="https://api.fyers.in"
                       target="_blank"
                       rel="noreferrer"
                       className="text-primary hover:underline flex items-center gap-1 text-[10px] lowercase"
                     >
-                      find in Fyers API portal <ExternalLink className="w-3 h-3" />
+                      open api.fyers.in <ExternalLink className="w-3 h-3" />
                     </a>
-                  </label>
-                  <input
-                    type="text"
-                    value={clientIdInput}
-                    onChange={(e) => setClientIdInput(e.target.value)}
-                    placeholder="e.g. XY12345-100 or XX12345-100"
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
-                  />
-                  <p className="text-[10px] text-muted-foreground">
-                    Located in your Fyers Developer Dashboard under <strong>My Apps</strong> &gt; App ID (e.g. XY12345-100).
-                  </p>
-                </div>
+                  </div>
 
-                {/* 2. Access Token */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white uppercase tracking-wider flex justify-between">
-                    <span>2. Fyers Access Token *</span>
-                    <a
-                      href="https://api-t1.fyers.in/api/v3/generate-authcode"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary hover:underline flex items-center gap-1 text-[10px] lowercase"
-                    >
-                      generate token <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={tokenInput}
-                    onChange={(e) => setTokenInput(e.target.value)}
-                    placeholder="Paste your daily Fyers Access Token here (e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6...)"
-                    className="w-full p-3 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
-                    required
-                  />
-                  <p className="text-[10px] text-muted-foreground">
-                    Paste your daily token generated from Fyers API.
-                  </p>
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase">
+                        Fyers App ID *
+                      </label>
+                      <input
+                        type="text"
+                        value={clientIdInput}
+                        onChange={(e) => setClientIdInput(e.target.value)}
+                        placeholder="e.g. XY12345-100"
+                        className="w-full px-3.5 py-2 rounded-lg bg-[#05070e] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        required
+                      />
+                    </div>
 
-                {/* Advanced Options Toggle */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-[11px] font-semibold text-muted-foreground hover:text-white flex items-center gap-1 py-1 focus:outline-none transition-colors"
-                  >
-                    {showAdvanced ? <ChevronUp className="w-3.5 h-3.5 text-primary" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    <span>{showAdvanced ? 'Hide Converting Auth Code Option' : 'Have a raw Auth Code? Click here'}</span>
-                  </button>
-
-                  {showAdvanced && (
-                    <div className="mt-3 p-4 rounded-xl bg-[#0a0d18] border border-[#1b2238] space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                        Fyers Secret Key (For Auth Code Conversion)
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase">
+                        Fyers Secret Key *
                       </label>
                       <input
                         type="password"
                         value={secretKeyInput}
                         onChange={(e) => setSecretKeyInput(e.target.value)}
-                        placeholder="Paste your Fyers Secret Key (e.g. A1B2C3D4)"
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#05070e] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        placeholder="e.g. A1B2C3D4"
+                        className="w-full px-3.5 py-2 rounded-lg bg-[#05070e] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        required
                       />
-                      <p className="text-[10px] text-muted-foreground">
-                        If you pasted a temporary <strong>Auth Code</strong> in the token box above, enter your Secret Key here to automatically convert it to an Access Token.
-                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
 
+                {/* STEP 2: Generate Auth Code Helper */}
+                <div className="p-4 rounded-xl bg-[#090c17] border border-[#161d33] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[11px]">2</span>
+                      Get Code From Fyers
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    Click the button below to log in on Fyers. Then copy the code or the redirect URL from your browser address bar.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenFyersLogin}
+                    className="w-full py-2.5 px-4 rounded-lg border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-xs flex items-center justify-center gap-2 transition-all"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Open Fyers Login Page in New Tab
+                  </button>
+                </div>
+
+                {/* STEP 3: Paste Code or Token */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[11px]">3</span>
+                    Paste Code, Access Token, or Redirect URL *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={tokenInput}
+                    onChange={(e) => setTokenInput(e.target.value)}
+                    placeholder="Paste the code, final access token, or full redirect URL copied from Fyers here..."
+                    className="w-full p-3 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
+                    required
+                  />
+                </div>
+
+                {/* Action Buttons */}
                 <div className="pt-2 flex flex-col sm:flex-row gap-3">
                   <button
                     type="submit"
@@ -219,12 +237,13 @@ export const FyersConnect: React.FC = () => {
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Validating Fyers Feed...
+                        Validating & Connecting Feed...
                       </>
                     ) : (
                       <>
                         <Zap className="w-4 h-4" />
-                        Validate & Connect Live Feed
+                        Connect Live Market Feed
+                        <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
@@ -242,7 +261,7 @@ export const FyersConnect: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  If your server has <code className="text-primary font-mono text-xs">FYERS_CLIENT_ID</code> and <code className="text-primary font-mono text-xs">FYERS_SECRET_KEY</code> configured in environment variables, click below to authenticate via the official FYERS OAuth portal.
+                  If your server administrator has configured <code className="text-primary font-mono text-xs">FYERS_CLIENT_ID</code> and <code className="text-primary font-mono text-xs">FYERS_SECRET_KEY</code> in Render environment variables, click below to authenticate via standard OAuth.
                 </p>
 
                 <div className="space-y-3">
@@ -250,10 +269,10 @@ export const FyersConnect: React.FC = () => {
                     <CheckCircle2 className="w-5 h-5 text-bullish shrink-0 mt-0.5" />
                     <div>
                       <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                        Official OAuth 2.0 Login
+                        Official OAuth 2.0 Flow
                       </h4>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Redirects directly to fyers.in login and returns authorization code back to TradeFinder.
+                        Redirects directly to fyers.in login and exchanges code on the server automatically.
                       </p>
                     </div>
                   </div>
@@ -273,7 +292,7 @@ export const FyersConnect: React.FC = () => {
                     ) : (
                       <>
                         <KeyRound className="w-4 h-4" />
-                        Authorize via Fyers OAuth
+                        Authorize via Server OAuth
                       </>
                     )}
                   </button>
