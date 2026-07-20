@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
-import { Workflow, ShieldAlert, KeyRound, Loader2, LogOut, CheckCircle2, Zap, Link2, ExternalLink, HelpCircle, ArrowRight } from 'lucide-react';
+import { Workflow, ShieldAlert, KeyRound, Loader2, LogOut, CheckCircle2, Zap, Link2, ExternalLink, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+
+const getDefaultRedirectUri = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:5000/api/v1/auth/fyers/callback';
+    }
+  }
+  return 'https://tradefinder-zvp0.onrender.com/api/v1/auth/fyers/callback';
+};
 
 export const FyersConnect: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'DIRECT' | 'OAUTH'>('DIRECT');
   const [clientIdInput, setClientIdInput] = useState('');
   const [secretKeyInput, setSecretKeyInput] = useState('');
+  const [redirectUriInput, setRedirectUriInput] = useState(getDefaultRedirectUri());
   const [tokenInput, setTokenInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +59,10 @@ export const FyersConnect: React.FC = () => {
       return;
     }
     setError(null);
-    const redirectUri = encodeURIComponent('https://tradefinder-zvp0.onrender.com/api/v1/auth/fyers/callback');
-    const authUrl = `https://api-t1.fyers.in/api/v3/generate-authcode?client_id=${appId}&redirect_uri=${redirectUri}&response_type=code`;
+
+    const chosenRedirect = redirectUriInput.trim() || getDefaultRedirectUri();
+    const encodedRedirect = encodeURIComponent(chosenRedirect);
+    const authUrl = `https://api-t1.fyers.in/api/v3/generate-authcode?client_id=${appId}&redirect_uri=${encodedRedirect}&response_type=code`;
     window.open(authUrl, '_blank');
   };
 
@@ -186,6 +199,20 @@ export const FyersConnect: React.FC = () => {
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-1 pt-1">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase flex justify-between">
+                      <span>Redirect URI in Fyers App Settings</span>
+                      <span className="text-[10px] text-amber-400 font-normal">must match Fyers app settings</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={redirectUriInput}
+                      onChange={(e) => setRedirectUriInput(e.target.value)}
+                      placeholder="e.g. https://tradefinder-zvp0.onrender.com/api/v1/auth/fyers/callback"
+                      className="w-full px-3.5 py-2 rounded-lg bg-[#05070e] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
                 </div>
 
                 {/* STEP 2: Generate Auth Code Helper */}
@@ -198,7 +225,7 @@ export const FyersConnect: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    Click the button below to log in on Fyers. Then copy the code or the redirect URL from your browser address bar.
+                    Click below to open Fyers login. Once logged in, copy the code or full redirect URL from your browser address bar.
                   </p>
 
                   <button
@@ -221,7 +248,7 @@ export const FyersConnect: React.FC = () => {
                     rows={3}
                     value={tokenInput}
                     onChange={(e) => setTokenInput(e.target.value)}
-                    placeholder="Paste the code, final access token, or full redirect URL copied from Fyers here..."
+                    placeholder="Paste the code, access token, or full redirect URL copied from Fyers here..."
                     className="w-full p-3 rounded-xl bg-[#0c0f1b] border border-[#1e263d] text-white text-xs font-mono placeholder-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
                     required
                   />
