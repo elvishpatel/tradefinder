@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const { dashboardData, loading, fetchInitialData } = useMarketStore();
+  const { dashboardData, sectorsList, loading, fetchInitialData } = useMarketStore();
 
   useEffect(() => {
     fetchInitialData();
@@ -207,47 +207,57 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {/* We will fetch and render some sectors directly from stock metrics */}
-            {['NIFTY_BANK', 'NIFTY_IT', 'NIFTY_AUTO', 'NIFTY_METAL', 'NIFTY_PHARMA', 'NIFTY_FMCG'].map((name) => {
-              // Standard names mapped to display
-              const disp = name.replace('NIFTY_', 'Nifty ');
-              // Compute mock values if sectorsList is not ready
-              const listSec = useMarketStore.getState().sectorsList.find(s => s.name === name);
-              const ret = listSec ? listSec.dailyReturn : 0.0;
-              const rank = listSec ? listSec.rank : '-';
+            {(() => {
+              const allSectors = ['NIFTY_BANK', 'NIFTY_IT', 'NIFTY_AUTO', 'NIFTY_METAL', 'NIFTY_PHARMA', 'NIFTY_FMCG', 'NIFTY_ENERGY', 'NIFTY_INFRA', 'NIFTY_REALTY'];
+              const sectorData = allSectors.map(name => {
+                const listSec = sectorsList.find(s => s.name === name);
+                return {
+                  name,
+                  disp: name.replace('NIFTY_', 'Nifty '),
+                  ret: listSec ? listSec.dailyReturn : 0.0,
+                  rank: listSec ? listSec.rank : '-',
+                };
+              }).sort((a, b) => b.ret - a.ret);
 
-              return (
-                <div
-                  key={name}
-                  className={`p-3.5 rounded-xl border flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] ${
-                    ret > 0.3
-                      ? 'bg-emerald-950/20 border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400'
-                      : ret < -0.3
-                      ? 'bg-rose-950/20 border-rose-500/20 hover:border-rose-500/40 text-rose-400'
-                      : 'bg-[#0f111c] border-[#1e2439] hover:border-white/10 text-muted-foreground'
-                  }`}
-                >
-                  <div className="flex justify-between items-start gap-1">
-                    <span className="text-xs font-bold text-white truncate block">
-                      {disp}
-                    </span>
-                    <span className="text-[9px] bg-white/5 border border-white/10 px-1 rounded text-muted-foreground font-mono">
-                      #{rank}
-                    </span>
-                  </div>
+              return sectorData.map((sec, idx) => {
+                const isUp = sec.ret > 0;
+                return (
+                  <div
+                    key={sec.name}
+                    className={`p-3.5 rounded-xl border flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] ${
+                      sec.ret >= 1.2
+                        ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+                        : sec.ret >= 0.2
+                        ? 'bg-emerald-950/30 border-emerald-500/25 text-emerald-400'
+                        : sec.ret <= -1.2
+                        ? 'bg-rose-950/60 border-rose-500/40 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.1)]'
+                        : sec.ret <= -0.2
+                        ? 'bg-rose-950/30 border-rose-500/25 text-rose-400'
+                        : 'bg-[#0f111c] border-[#1e2439] hover:border-white/10 text-muted-foreground'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-1">
+                      <span className="text-xs font-bold text-white truncate block">
+                        {sec.disp}
+                      </span>
+                      <span className="text-[9px] bg-black/40 border border-white/10 px-1.5 py-0.5 rounded text-white font-mono font-bold">
+                        #{idx + 1}
+                      </span>
+                    </div>
 
-                  <div className="mt-4 flex justify-between items-baseline">
-                    <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-                      Return
-                    </span>
-                    <span className="text-sm font-extrabold font-mono">
-                      {ret > 0 ? '+' : ''}
-                      {ret.toFixed(2)}%
-                    </span>
+                    <div className="mt-3 flex justify-between items-baseline">
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                        Daily
+                      </span>
+                      <span className="text-sm font-black font-mono text-white">
+                        {isUp ? '+' : ''}
+                        {sec.ret.toFixed(2)}%
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
