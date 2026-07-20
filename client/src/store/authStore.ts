@@ -12,7 +12,7 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => Promise<boolean>;
   checkFyersSession: () => Promise<boolean>;
-  saveDirectFyersToken: (token: string, clientId?: string) => Promise<boolean>;
+  saveDirectFyersToken: (token: string, clientId?: string, secretKey?: string) => Promise<boolean>;
   disconnectFyers: () => Promise<void>;
 }
 
@@ -72,9 +72,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  saveDirectFyersToken: async (token: string, clientId?: string) => {
+  saveDirectFyersToken: async (token: string, clientId?: string, secretKey?: string) => {
     try {
-      const response = await api.post('/auth/fyers/direct-token', { token, clientId });
+      const response = await api.post('/auth/fyers/direct-token', { token, clientId, secretKey });
       if (response.data.connected || response.data.success) {
         set({
           fyersConnected: true,
@@ -90,6 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw err;
     }
   },
+
 
   disconnectFyers: async () => {
     try {

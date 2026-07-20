@@ -1,4 +1,5 @@
 import axios from 'axios';
+import crypto from 'crypto';
 import config from '../config';
 import sessionRepository from '../repositories/session-repository';
 import logger from '../utils/logger';
@@ -41,7 +42,7 @@ export class FyersClient {
       const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
         params: { symbols: 'NSE:NIFTY50-INDEX' },
         headers: { Authorization: authHeader },
-        timeout: 8000,
+        timeout: 6000,
       });
 
       if (response.data && (response.data.s === 'ok' || Array.isArray(response.data.d))) {
@@ -54,6 +55,52 @@ export class FyersClient {
       const msg = err.response?.data?.errmsg || err.response?.data?.message || err.message || 'Token validation failed';
       logger.error(`Fyers token validation error: ${msg}`);
       return { valid: false, message: msg };
+    }
+  }
+
+  /**
+   * Exchange an Auth Code for an Access Token
+   */
+  async exchangeAuthCode(
+    authCode: string,
+    clientId?: string,
+    secretKey?: string
+  ): Promise<{ success: boolean; accessToken?: string; message?: string }> {
+    try {
+      const activeClientId = clientId || config.FYERS.CLIENT_ID;
+      const activeSecretKey = secretKey || config.FYERS.SECRET_KEY;
+
+      if (!activeClientId || !activeSecretKey) {
+        return {
+          success: false,
+          message: 'Fyers Client ID and Secret Key are required to convert an Auth Code into an Access Token.',
+        };
+      }
+
+      const rawString = `${activeClientId}:${activeSecretKey}`;
+      const appIdHash = crypto.createHash('sha256').update(rawString).digest('hex');
+
+      const response = await axios.post(
+        'https://api-t1.fyers.in/api/v3/validate-authcode',
+        {
+          grant_type: 'authorization_code',
+          appIdHash: appIdHash,
+          code: authCode,
+        },
+        { timeout: 8000 }
+      );
+
+      if (response.data && response.data.s === 'ok' && response.data.access_token) {
+        const fullToken = `${activeClientId}:${response.data.access_token}`;
+        return { success: true, accessToken: fullToken };
+      }
+
+      const msg = response.data?.message || response.data?.errmsg || 'Failed to exchange Auth Code for Access Token';
+      return { success: false, message: msg };
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.errmsg || err.message || 'Auth code exchange failed';
+      logger.error(`Fyers auth code exchange error: ${msg}`);
+      return { success: false, message: msg };
     }
   }
 
@@ -76,7 +123,7 @@ export class FyersClient {
         const response = await axios.get('https://api-t1.fyers.in/data/quotes', {
           params: { symbols: symbolString },
           headers: { Authorization: authHeader },
-          timeout: 8000,
+          timeout: 6000,
         });
 
         if (response.data && response.data.s === 'ok' && Array.isArray(response.data.d)) {
@@ -142,7 +189,7 @@ export class FyersClient {
           range_to: rangeTo,
         },
         headers: { Authorization: authHeader },
-        timeout: 10000,
+        timeout: 8000,
       });
 
       if (response.data && response.data.s === 'ok') {
